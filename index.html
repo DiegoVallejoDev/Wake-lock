@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>90s Style Web</title>
+  <style>
+    body {
+      background-color: #cccccc; /* Gray background */
+      color: #000000; /* Black text */
+      font-family: "Courier New", Courier, monospace; /* Classic monospace font */
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      background-color: #888888; /* Darker gray for the header */
+      color: #ffffff; /* White text */
+      padding: 10px;
+      margin: 0;
+    }
+    .container {
+      margin: 20px auto;
+      width: 80%;
+      border: 2px solid #000000; /* Black border */
+      padding: 10px;
+      background-color: #ffffff; /* White content background */
+    }
+    button {
+      font-family: "Courier New", Courier, monospace;
+      background-color: #888888;
+      color: #ffffff;
+      border: 2px solid #000000;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #444444; /* Even darker gray */
+    }
+    footer {
+      margin-top: 20px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>90s Retro Web</h1>
+  <div class="container">
+    <p>Welcome to the amazing 90s-style web page!</p>
+    <p>Click the button below to keep your computer awake.</p>
+    <button id="wake-lock-btn">Enable Wake Lock</button>
+    <p id="status">Status: Wake Lock is not active</p>
+  </div>
+  <footer>
+    &copy; 1995-2025 Retro Web, Inc.
+  </footer>
+
+  <script>
+    let wakeLock = null;
+
+    async function requestWakeLock() {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        document.getElementById('status').innerText = "Status: Wake Lock is active";
+        console.log('Wake Lock is active');
+
+        // Handle wake lock release
+        wakeLock.addEventListener('release', () => {
+          document.getElementById('status').innerText = "Status: Wake Lock was released";
+          console.log('Wake Lock was released');
+        });
+      } catch (err) {
+        console.error(`Wake Lock request failed: ${err.name}, ${err.message}`);
+      }
+    }
+
+    document.getElementById('wake-lock-btn').addEventListener('click', requestWakeLock);
+  </script>
+</body>
+</html>

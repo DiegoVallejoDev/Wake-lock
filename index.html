@@ -3,78 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wake-lock</title>
+  <title>Retro 98 Web</title>
+  <link rel="stylesheet" href="https://unpkg.com/98.css">
   <style>
-    /* Overall body and background */
     body {
-      background-color: #c0c0c0; /* Light gray background */
-      font-family: "Tahoma", "Geneva", sans-serif; /* Common font from Windows 95 */
+      background: teal;
       margin: 0;
-      padding: 0;
-    }
-    h1 {
-      font-family: "Arial", sans-serif; /* Title font */
-      color: #000080; /* Windows 95 blue */
-      background-color: #a0a0a0; /* Gray background for the header */
       padding: 10px;
-      text-align: center;
-      margin: 0;
-      border-bottom: 2px solid #808080; /* Border under header */
+      font-family: "MS Sans Serif", sans-serif;
     }
-    /* Main window/container */
-    .container {
-      margin: 20px auto;
+    .window {
       width: 60%;
-      border: 2px solid #000080; /* Windows 95 border color */
-      background-color: #ffffff; /* White background */
+      margin: 20px auto;
+    }
+    .window-content {
       padding: 10px;
-      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
     }
-    /* Button styling */
-    button {
-      font-family: "Tahoma", "Geneva", sans-serif;
-      background-color: #c0c0c0; /* Light gray button background */
-      color: black;
-      border: 2px solid #000080; /* Blue border */
-      padding: 6px 12px;
-      cursor: pointer;
+    .taskbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: silver;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      border-top: 2px solid gray;
+    }
+    .start-button {
       font-weight: bold;
-      margin: 10px 0;
+      margin-right: 10px;
     }
-    button:hover {
-      background-color: #808080; /* Darker gray on hover */
-    }
-    button:active {
-      background-color: #404040; /* Dark gray when clicked */
-    }
-    /* Status and footer */
-    #status {
-      font-weight: bold;
-      color: #000080;
-    }
-    footer {
-      margin-top: 20px;
-      font-size: 12px;
-      color: #808080;
-      text-align: center;
-    }
-    .windows-border {
-      border: 2px solid #000080;
-      padding: 10px;
+    .taskbar-clock {
+      margin-left: auto;
+      padding: 2px 8px;
+      border: inset 2px;
+      background: white;
     }
   </style>
 </head>
 <body>
-  <h1>Wake-lock</h1>
-  <div class="container windows-border">
-    <p>Welcome to Wake-lock, a simple utility that prevents your computer from sleeping.</p>
-    <p>Click the button below to activate the wake lock and keep your computer awake.</p>
-    <button id="wake-lock-btn">Enable Wake Lock</button>
-    <p id="status">Status: Wake Lock is not active</p>
+
+  <div class="window">
+    <div class="title-bar">
+      <div class="title-bar-text">Retro 98 Web</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize"></button>
+        <button aria-label="Maximize"></button>
+        <button aria-label="Close"></button>
+      </div>
+    </div>
+    <div class="window-content">
+      <p>Welcome to the amazing Windows 98-style webpage!</p>
+      <p>Click the button below to prevent your computer from sleeping.</p>
+      <button id="wake-lock-btn">Enable Wake Lock</button>
+      <p id="status">Status: Wake Lock is not active</p>
+    </div>
   </div>
-  <footer>
-    &copy; 1995-2025 Wake-lock, Inc.
-  </footer>
+
+  <div class="taskbar">
+    <button class="start-button">Start</button>
+    <span>Retro Web 98</span>
+    <span class="taskbar-clock" id="clock">00:00</span>
+  </div>
 
   <script>
     let wakeLock = null;
@@ -85,7 +76,6 @@
         document.getElementById('status').innerText = "Status: Wake Lock is active";
         console.log('Wake Lock is active');
 
-        // Handle wake lock release
         wakeLock.addEventListener('release', () => {
           document.getElementById('status').innerText = "Status: Wake Lock was released";
           console.log('Wake Lock was released');
@@ -96,6 +86,17 @@
     }
 
     document.getElementById('wake-lock-btn').addEventListener('click', requestWakeLock);
+
+    function updateClock() {
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      document.getElementById('clock').innerText = `${hours}:${minutes}`;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
   </script>
+
 </body>
 </html>

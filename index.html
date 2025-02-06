@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#008080" />
   <title>Retro 98 Web</title>
   <link rel="stylesheet" href="https://unpkg.com/98.css">
   <style>
@@ -12,41 +14,48 @@
       padding: 10px;
       font-family: "MS Sans Serif", sans-serif;
     }
+
     .window {
       width: 60%;
       margin: 20px auto;
     }
+
     .window-content {
       padding: 10px;
     }
+
     .taskbar {
       position: fixed;
       bottom: 0;
       left: 0;
       width: 100%;
       background: silver;
-      padding: 5px;
+      padding: 5px 5px;
       display: flex;
       align-items: center;
       border-top: 2px solid gray;
     }
+
     .start-button {
       font-weight: bold;
       margin-right: 10px;
     }
+
     .taskbar-clock {
       margin-left: auto;
+      margin-right: 20px;
       padding: 2px 8px;
       border: inset 2px;
       background: white;
     }
   </style>
 </head>
+
 <body>
 
-  <div class="window">
+  <div class="window" id="wake-Lock">
     <div class="title-bar">
-      <div class="title-bar-text">Retro 98 Web</div>
+      <div class="title-bar-text">Wake-lock</div>
       <div class="title-bar-controls">
         <button aria-label="Minimize"></button>
         <button aria-label="Maximize"></button>
@@ -54,7 +63,7 @@
       </div>
     </div>
     <div class="window-content">
-      <p>Welcome to the amazing Windows 98-style webpage!</p>
+      <p>Welcome to the amazing Wake-lock!</p>
       <p>Click the button below to prevent your computer from sleeping.</p>
       <button id="wake-lock-btn">Enable Wake Lock</button>
       <p id="status">Status: Wake Lock is not active</p>
@@ -63,7 +72,7 @@
 
   <div class="taskbar">
     <button class="start-button">Start</button>
-    <span>Retro Web 98</span>
+    <span>wake-Lock</span>
     <span class="taskbar-clock" id="clock">00:00</span>
   </div>
 
@@ -99,4 +108,5 @@
   </script>
 
 </body>
+
 </html>

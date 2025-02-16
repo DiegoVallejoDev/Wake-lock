@@ -5,23 +5,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#008080" />
-  <title>Retro 98 Web</title>
-  <link rel="stylesheet" href="https://unpkg.com/98.css">
+  <title>Retro Web Inc</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/98.css/0.1.20/98.css">
   <style>
     body {
-      background: teal;
+      background: #008080;
       margin: 0;
       padding: 10px;
       font-family: "MS Sans Serif", sans-serif;
+      height: 100vh;
+      overflow: hidden;
     }
 
     .window {
-      width: 60%;
-      margin: 20px auto;
+      width: 500px;
+      margin: 20px;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #calculator {
+      left: 530px;
+    }
+
+    #notepad {
+      top: 250px;
     }
 
     .window-content {
       padding: 10px;
+      background: #c0c0c0;
     }
 
     .taskbar {
@@ -29,56 +43,236 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      background: silver;
-      padding: 5px 5px;
+      background: #c0c0c0;
+      padding: 3px;
       display: flex;
       align-items: center;
-      border-top: 2px solid gray;
+      border-top: 2px solid #fff;
+      box-shadow: inset 1px 0 #dfdfdf;
+      z-index: 9999;
     }
 
     .start-button {
       font-weight: bold;
       margin-right: 10px;
+      padding: 3px 6px;
     }
 
     .taskbar-clock {
       margin-left: auto;
-      margin-right: 20px;
+      margin-right: 10px;
       padding: 2px 8px;
       border: inset 2px;
       background: white;
+    }
+
+    .desktop-icon {
+      text-align: center;
+      color: white;
+      margin: 20px;
+      cursor: pointer;
+      width: 75px;
+    }
+
+    .desktop-icon img {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 5px;
+    }
+
+    .menu {
+      display: none;
+      position: fixed;
+      bottom: 30px;
+      left: 0;
+      background: #c0c0c0;
+      border: 2px solid #000;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    .menu-item {
+      padding: 5px 20px;
+      cursor: pointer;
+    }
+
+    .menu-item:hover {
+      background: #000080;
+      color: white;
+    }
+
+    .calculator-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      padding: 10px;
+    }
+
+    .calculator-grid button {
+      padding: 10px;
+      width: 100%;
+    }
+
+    .calculator-display {
+      width: 100%;
+      margin-bottom: 10px;
+      text-align: right;
+      padding: 5px;
+    }
+
+    #notepad-content {
+      width: 100%;
+      height: 200px;
+      margin: 10px 0;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 
 <body>
+  <!-- Desktop Icons -->
+  <div class="desktop-icon" onclick="showWindow('wake-Lock')">
+    <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/utilities-terminal.png" alt="Wake Lock">
+    <div>Wake Lock</div>
+  </div>
+  <div class="desktop-icon" onclick="showWindow('calculator')">
+    <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/accessories-calculator.png" alt="Calculator">
+    <div>Calculator</div>
+  </div>
+  <div class="desktop-icon" onclick="showWindow('notepad')">
+    <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/accessories-text-editor.png" alt="Notepad">
+    <div>Notepad</div>
+  </div>
 
-  <div class="window" id="wake-Lock">
+  <!-- Wake Lock Window -->
+  <div class="window hidden" id="wake-Lock">
     <div class="title-bar">
-      <div class="title-bar-text">Wake-lock</div>
+      <div class="title-bar-text">Wake Lock - Retro Web Inc</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize"></button>
-        <button aria-label="Maximize"></button>
-        <button aria-label="Close"></button>
+        <button aria-label="Minimize" onclick="minimizeWindow('wake-Lock')"></button>
+        <button aria-label="Maximize" onclick="maximizeWindow('wake-Lock')"></button>
+        <button aria-label="Close" onclick="closeWindow('wake-Lock')"></button>
       </div>
     </div>
     <div class="window-content">
-      <p>Welcome to the amazing Wake-lock!</p>
+      <p>Welcome to Retro Web Inc Wake Lock!</p>
       <p>Click the button below to prevent your computer from sleeping.</p>
       <button id="wake-lock-btn">Enable Wake Lock</button>
       <p id="status">Status: Wake Lock is not active</p>
     </div>
   </div>
 
+  <!-- Calculator Window -->
+  <div class="window hidden" id="calculator">
+    <div class="title-bar">
+      <div class="title-bar-text">Calculator - Retro Web Inc</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" onclick="minimizeWindow('calculator')"></button>
+        <button aria-label="Maximize" onclick="maximizeWindow('calculator')"></button>
+        <button aria-label="Close" onclick="closeWindow('calculator')"></button>
+      </div>
+    </div>
+    <div class="window-content">
+      <input type="text" class="calculator-display" id="calc-display" readonly>
+      <div class="calculator-grid">
+        <button onclick="appendNumber('7')">7</button>
+        <button onclick="appendNumber('8')">8</button>
+        <button onclick="appendNumber('9')">9</button>
+        <button onclick="appendOperator('+')">+</button>
+        <button onclick="appendNumber('4')">4</button>
+        <button onclick="appendNumber('5')">5</button>
+        <button onclick="appendNumber('6')">6</button>
+        <button onclick="appendOperator('-')">-</button>
+        <button onclick="appendNumber('1')">1</button>
+        <button onclick="appendNumber('2')">2</button>
+        <button onclick="appendNumber('3')">3</button>
+        <button onclick="appendOperator('*')">×</button>
+        <button onclick="appendNumber('0')">0</button>
+        <button onclick="appendNumber('.')">.</button>
+        <button onclick="calculate()">=</button>
+        <button onclick="appendOperator('/')">÷</button>
+        <button onclick="clearDisplay()">C</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notepad Window -->
+  <div class="window hidden" id="notepad">
+    <div class="title-bar">
+      <div class="title-bar-text">Notepad - Retro Web Inc</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" onclick="minimizeWindow('notepad')"></button>
+        <button aria-label="Maximize" onclick="maximizeWindow('notepad')"></button>
+        <button aria-label="Close" onclick="closeWindow('notepad')"></button>
+      </div>
+    </div>
+    <div class="window-content">
+      <textarea id="notepad-content" placeholder="Type your notes here..."></textarea>
+      <button onclick="saveNotes()">Save</button>
+      <button onclick="clearNotes()">Clear</button>
+    </div>
+  </div>
+
+  <!-- Start Menu -->
+  <div class="menu" id="start-menu">
+    <div class="menu-item" onclick="showWindow('wake-Lock')">Wake Lock</div>
+    <div class="menu-item" onclick="showWindow('calculator')">Calculator</div>
+    <div class="menu-item" onclick="showWindow('notepad')">Notepad</div>
+    <div class="menu-item" onclick="toggleStartMenu()">Exit</div>
+  </div>
+
+  <!-- Taskbar -->
   <div class="taskbar">
-    <button class="start-button">Start</button>
-    <span>wake-Lock</span>
+    <button class="start-button" onclick="toggleStartMenu()">Start</button>
+    <span id="active-windows"></span>
     <span class="taskbar-clock" id="clock">00:00</span>
   </div>
 
   <script>
     let wakeLock = null;
+    let activeWindows = new Set();
 
+    // Window Management
+    function showWindow(id) {
+      document.getElementById(id).classList.remove('hidden');
+      activeWindows.add(id);
+      updateTaskbar();
+    }
+
+    function closeWindow(id) {
+      document.getElementById(id).classList.add('hidden');
+      activeWindows.delete(id);
+      updateTaskbar();
+    }
+
+    function minimizeWindow(id) {
+      document.getElementById(id).classList.add('hidden');
+      updateTaskbar();
+    }
+
+    function maximizeWindow(id) {
+      const window = document.getElementById(id);
+      window.style.width = window.style.width === '100%' ? '500px' : '100%';
+      window.style.height = window.style.height === '80vh' ? 'auto' : '80vh';
+    }
+
+    function updateTaskbar() {
+      const taskbarWindows = Array.from(activeWindows).map(id => 
+        `<button onclick="showWindow('${id}')">${id}</button>`
+      ).join('');
+      document.getElementById('active-windows').innerHTML = taskbarWindows;
+    }
+
+    // Start Menu
+    function toggleStartMenu() {
+      const menu = document.getElementById('start-menu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Wake Lock
     async function requestWakeLock() {
       try {
         wakeLock = await navigator.wakeLock.request('screen');
@@ -94,8 +288,47 @@
       }
     }
 
-    document.getElementById('wake-lock-btn').addEventListener('click', requestWakeLock);
+    // Calculator
+    let displayValue = '';
 
+    function appendNumber(num) {
+      displayValue += num;
+      document.getElementById('calc-display').value = displayValue;
+    }
+
+    function appendOperator(op) {
+      displayValue += ` ${op} `;
+      document.getElementById('calc-display').value = displayValue;
+    }
+
+    function calculate() {
+      try {
+        displayValue = eval(displayValue).toString();
+        document.getElementById('calc-display').value = displayValue;
+      } catch (err) {
+        displayValue = 'Error';
+        document.getElementById('calc-display').value = displayValue;
+      }
+    }
+
+    function clearDisplay() {
+      displayValue = '';
+      document.getElementById('calc-display').value = displayValue;
+    }
+
+    // Notepad
+    function saveNotes() {
+      const content = document.getElementById('notepad-content').value;
+      localStorage.setItem('notepad-content', content);
+      alert('Notes saved!');
+    }
+
+    function clearNotes() {
+      document.getElementById('notepad-content').value = '';
+      localStorage.removeItem('notepad-content');
+    }
+
+    // Clock
     function updateClock() {
       const now = new Date();
       const hours = now.getHours().toString().padStart(2, '0');
@@ -103,10 +336,18 @@
       document.getElementById('clock').innerText = `${hours}:${minutes}`;
     }
 
+    // Event Listeners
+    document.getElementById('wake-lock-btn').addEventListener('click', requestWakeLock);
+    
+    // Initialize
     setInterval(updateClock, 1000);
     updateClock();
+    
+    // Load saved notes
+    const savedNotes = localStorage.getItem('notepad-content');
+    if (savedNotes) {
+      document.getElementById('notepad-content').value = savedNotes;
+    }
   </script>
-
 </body>
-
 </html>

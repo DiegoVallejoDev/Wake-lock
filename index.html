@@ -23,6 +23,16 @@
       position: absolute;
       top: 0;
       left: 0;
+      background: silver;
+      box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .window.maximized {
+      width: calc(100% - 6px) !important;
+      height: calc(100vh - 45px) !important;
+      margin: 0 !important;
+      top: 0 !important;
+      left: 0 !important;
     }
 
     #calculator {
@@ -43,6 +53,7 @@
       bottom: 0;
       left: 0;
       width: 100%;
+      height: 28px;
       background: #c0c0c0;
       padding: 3px;
       display: flex;
@@ -56,6 +67,9 @@
       font-weight: bold;
       margin-right: 10px;
       padding: 3px 6px;
+      height: 22px;
+      display: flex;
+      align-items: center;
     }
 
     .taskbar-clock {
@@ -72,6 +86,7 @@
       margin: 20px;
       cursor: pointer;
       width: 75px;
+      float: left;
     }
 
     .desktop-icon img {
@@ -89,10 +104,11 @@
       border: 2px solid #000;
       box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
       z-index: 1000;
+      min-width: 200px;
     }
 
     .menu-item {
-      padding: 5px 20px;
+      padding: 8px 20px;
       cursor: pointer;
     }
 
@@ -114,20 +130,41 @@
     }
 
     .calculator-display {
-      width: 100%;
+      width: calc(100% - 10px);
       margin-bottom: 10px;
       text-align: right;
       padding: 5px;
     }
 
     #notepad-content {
-      width: 100%;
+      width: calc(100% - 10px);
       height: 200px;
       margin: 10px 0;
+      resize: none;
     }
 
     .hidden {
       display: none;
+    }
+
+    #active-windows button {
+      margin-right: 5px;
+      padding: 3px 8px;
+      height: 22px;
+    }
+
+    .title-bar {
+      background: #000080;
+      padding: 3px 2px 3px 3px;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .title-bar-text {
+      font-weight: bold;
+      margin-right: 24px;
     }
   </style>
 </head>
@@ -235,10 +272,32 @@
     let wakeLock = null;
     let activeWindows = new Set();
 
+    // Wake Lock
+    async function requestWakeLock() {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        document.getElementById('status').innerText = "Status: Wake Lock is active";
+        console.log('Wake Lock is active');
+
+        wakeLock.addEventListener('release', () => {
+          document.getElementById('status').innerText = "Status: Wake Lock was released";
+          console.log('Wake Lock was released');
+        });
+      } catch (err) {
+        document.getElementById('status').innerText = `Status: Error - ${err.message}`;
+        console.error(`Wake Lock request failed: ${err.name}, ${err.message}`);
+      }
+    }
+
     // Window Management
     function showWindow(id) {
-      document.getElementById(id).classList.remove('hidden');
+      const window = document.getElementById(id);
+      window.classList.remove('hidden');
       activeWindows.add(id);
+      // Bring to front
+      const windows = document.querySelectorAll('.window');
+      windows.forEach(w => w.style.zIndex = '1');
+      window.style.zIndex = '2';
       updateTaskbar();
     }
 
@@ -255,13 +314,12 @@
 
     function maximizeWindow(id) {
       const window = document.getElementById(id);
-      window.style.width = window.style.width === '100%' ? '500px' : '100%';
-      window.style.height = window.style.height === '80vh' ? 'auto' : '80vh';
+      window.classList.toggle('maximized');
     }
 
     function updateTaskbar() {
       const taskbarWindows = Array.from(activeWindows).map(id => 
-        `<button onclick="showWindow('${id}')">${id}</button>`
+        `<button onclick="showWindow('${id}')">${id.replace('-', ' ')}</button>`
       ).join('');
       document.getElementById('active-windows').innerHTML = taskbarWindows;
     }
@@ -270,22 +328,6 @@
     function toggleStartMenu() {
       const menu = document.getElementById('start-menu');
       menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
-
-    // Wake Lock
-    async function requestWakeLock() {
-      try {
-        wakeLock = await navigator.wakeLock.request('screen');
-        document.getElementById('status').innerText = "Status: Wake Lock is active";
-        console.log('Wake Lock is active');
-
-        wakeLock.addEventListener('release', () => {
-          document.getElementById('status').innerText = "Status: Wake Lock was released";
-          console.log('Wake Lock was released');
-        });
-      } catch (err) {
-        console.error(`Wake Lock request failed: ${err.name}, ${err.message}`);
-      }
     }
 
     // Calculator
@@ -336,18 +378,33 @@
       document.getElementById('clock').innerText = `${hours}:${minutes}`;
     }
 
-    // Event Listeners
-    document.getElementById('wake-lock-btn').addEventListener('click', requestWakeLock);
-    
-    // Initialize
-    setInterval(updateClock, 1000);
-    updateClock();
-    
-    // Load saved notes
-    const savedNotes = localStorage.getItem('notepad-content');
-    if (savedNotes) {
-      document.getElementById('notepad-content').value = savedNotes;
-    }
+    // Event Listeners and Initialization
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize wake lock button
+      const wakeLockBtn = document.getElementById('wake-lock-btn');
+      if (wakeLockBtn) {
+        wakeLockBtn.addEventListener('click', requestWakeLock);
+      }
+
+      // Initialize clock
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      // Load saved notes
+      const savedNotes = localStorage.getItem('notepad-content');
+      if (savedNotes) {
+        document.getElementById('notepad-content').value = savedNotes;
+      }
+
+      // Close start menu when clicking outside
+      document.addEventListener('click', function(event) {
+        const startMenu = document.getElementById('start-menu');
+        const startButton = document.querySelector('.start-button');
+        if (!startButton.contains(event.target) && !startMenu.contains(event.target)) {
+          startMenu.style.display = 'none';
+        }
+      });
+    });
   </script>
 </body>
 </html>

@@ -25,6 +25,7 @@
       left: 0;
       background: silver;
       box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+      user-select: none; /* Prevent text selection while dragging */
     }
 
     .window.maximized {
@@ -160,6 +161,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: move; /* Add move cursor to indicate draggable */
     }
 
     .title-bar-text {
@@ -407,6 +409,81 @@
         }
       });
     });
+
+     // Add dragging functionality
+    let isDragging = false;
+    let currentWindow = null;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+
+    // Initialize draggable windows
+    document.addEventListener('DOMContentLoaded', function() {
+      // Previous initialization code remains
+
+      // Add event listeners for all windows
+      const windows = document.querySelectorAll('.window');
+      windows.forEach(window => {
+        const titleBar = window.querySelector('.title-bar');
+        
+        titleBar.addEventListener('mousedown', startDragging);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDragging);
+
+        // Bring window to front when clicked
+        window.addEventListener('mousedown', function() {
+          const windows = document.querySelectorAll('.window');
+          windows.forEach(w => w.style.zIndex = '1');
+          window.style.zIndex = '2';
+        });
+      });
+    });
+
+    function startDragging(e) {
+      if (e.target.tagName === 'BUTTON') return; // Don't drag if clicking window controls
+      
+      currentWindow = e.target.closest('.window');
+      if (!currentWindow) return;
+
+      isDragging = true;
+      
+      // Get initial mouse coordinates
+      initialX = e.clientX - currentWindow.offsetLeft;
+      initialY = e.clientY - currentWindow.offsetTop;
+
+      // Add a dragging class for visual feedback
+      currentWindow.classList.add('dragging');
+    }
+
+    function drag(e) {
+      if (!isDragging) return;
+
+      e.preventDefault();
+
+      // Calculate new position
+      const newX = e.clientX - initialX;
+      const newY = e.clientY - initialY;
+
+      // Ensure window stays within viewport bounds
+      const maxX = window.innerWidth - currentWindow.offsetWidth;
+      const maxY = window.innerHeight - currentWindow.offsetHeight - 28; // Account for taskbar
+
+      const boundedX = Math.min(Math.max(0, newX), maxX);
+      const boundedY = Math.min(Math.max(0, newY), maxY);
+
+      // Update window position
+      currentWindow.style.left = boundedX + 'px';
+      currentWindow.style.top = boundedY + 'px';
+    }
+
+    function stopDragging() {
+      isDragging = false;
+      if (currentWindow) {
+        currentWindow.classList.remove('dragging');
+        currentWindow = null;
+      }
+    }
   </script>
 </body>
 </html>

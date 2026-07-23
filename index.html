@@ -168,6 +168,21 @@
       font-weight: bold;
       margin-right: 24px;
     }
+
+    .timer-display {
+      font-family: "MS Sans Serif", monospace;
+      font-size: 2.2em;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    .timer-controls {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin: 8px 0;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 
@@ -184,6 +199,10 @@
   <div class="desktop-icon" onclick="showWindow('notepad')">
     <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/accessories-text-editor.png" alt="Notepad">
     <div>Notepad</div>
+  </div>
+  <div class="desktop-icon" onclick="showWindow('timer')">
+    <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/clock.png" alt="Timer">
+    <div>Timer</div>
   </div>
 
   <!-- Wake Lock Window -->
@@ -255,11 +274,39 @@
     </div>
   </div>
 
+  <!-- Timer Window -->
+  <div class="window hidden" id="timer">
+    <div class="title-bar">
+      <div class="title-bar-text">Timer - Retro Web Inc</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" onclick="minimizeWindow('timer')"></button>
+        <button aria-label="Maximize" onclick="maximizeWindow('timer')"></button>
+        <button aria-label="Close" onclick="closeWindow('timer')"></button>
+      </div>
+    </div>
+    <div class="window-content">
+      <p>Keep the screen awake while the timer runs.</p>
+      <div class="timer-display" id="timer-display">00:00</div>
+      <div class="timer-controls">
+        <button onclick="setTimer(60)">1m</button>
+        <button onclick="setTimer(300)">5m</button>
+        <button onclick="setTimer(1500)">25m</button>
+      </div>
+      <div class="timer-controls">
+        <button id="timer-start" onclick="startTimer()">Start</button>
+        <button onclick="pauseTimer()">Pause</button>
+        <button onclick="resetTimer()">Reset</button>
+      </div>
+      <p id="timer-status">Ready</p>
+    </div>
+  </div>
+
   <!-- Start Menu -->
   <div class="menu" id="start-menu">
     <div class="menu-item" onclick="showWindow('wake-Lock')">Wake Lock</div>
     <div class="menu-item" onclick="showWindow('calculator')">Calculator</div>
     <div class="menu-item" onclick="showWindow('notepad')">Notepad</div>
+    <div class="menu-item" onclick="showWindow('timer')">Timer</div>
     <div class="menu-item" onclick="toggleStartMenu()">Exit</div>
   </div>
 
@@ -308,6 +355,7 @@
     function closeWindow(id) {
       document.getElementById(id).classList.add('hidden');
       activeWindows.delete(id);
+      if (id === 'timer') pauseTimer();
       updateTaskbar();
     }
 
@@ -382,6 +430,87 @@
       document.getElementById('clock').innerText = `${hours}:${minutes}`;
     }
 
+    // Timer
+    let timerInterval = null;
+    let timerRemaining = 0;
+    let timerTotal = 0;
+    let timerWakeLock = null;
+
+    function formatTimerTime(seconds) {
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function updateTimerDisplay() {
+      document.getElementById('timer-display').innerText = formatTimerTime(timerRemaining);
+    }
+
+    function updateTimerStatus(message) {
+      const statusEl = document.getElementById('timer-status');
+      if (statusEl) statusEl.innerText = message;
+    }
+
+    function setTimer(seconds) {
+      pauseTimer();
+      timerRemaining = seconds;
+      timerTotal = seconds;
+      updateTimerDisplay();
+      updateTimerStatus('Ready');
+    }
+
+    async function requestTimerWakeLock() {
+      if (!('wakeLock' in navigator)) return;
+      try {
+        timerWakeLock = await navigator.wakeLock.request('screen');
+      } catch (err) {
+        console.error('Timer wake lock request failed:', err);
+      }
+    }
+
+    function releaseTimerWakeLock() {
+      if (timerWakeLock) {
+        try {
+          timerWakeLock.release();
+        } catch (err) {
+          console.error('Timer wake lock release failed:', err);
+        }
+        timerWakeLock = null;
+      }
+    }
+
+    function startTimer() {
+      if (timerRemaining <= 0) return;
+      if (timerInterval) clearInterval(timerInterval);
+      releaseTimerWakeLock();
+      updateTimerStatus('Running...');
+      requestTimerWakeLock();
+      timerInterval = setInterval(() => {
+        timerRemaining--;
+        updateTimerDisplay();
+        if (timerRemaining <= 0) {
+          pauseTimer();
+          updateTimerStatus("Time's up!");
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      releaseTimerWakeLock();
+      updateTimerStatus(timerRemaining > 0 ? 'Paused' : 'Finished');
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      timerRemaining = timerTotal;
+      updateTimerDisplay();
+      updateTimerStatus('Ready');
+    }
+
     // Event Listeners and Initialization
     document.addEventListener('DOMContentLoaded', function() {
       // Initialize wake lock button
@@ -399,6 +528,9 @@
       if (savedNotes) {
         document.getElementById('notepad-content').value = savedNotes;
       }
+
+      // Initialize timer with a default 5-minute countdown
+      setTimer(300);
 
       // Close start menu when clicking outside
       document.addEventListener('click', function(event) {

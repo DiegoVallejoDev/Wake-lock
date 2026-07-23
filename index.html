@@ -183,6 +183,11 @@
       margin: 8px 0;
       flex-wrap: wrap;
     }
+
+    #active-windows button.active {
+      border: inset 2px;
+      background: #d4d0c8;
+    }
   </style>
 </head>
 
@@ -321,17 +326,23 @@
 
   <script>
     let wakeLock = null;
+    let wakeLockWanted = false;
     let activeWindows = new Set();
+    let zIndexCounter = 10;
 
     // Wake Lock
     async function requestWakeLock() {
+      if (wakeLock && !wakeLock.released) return;
       try {
         wakeLock = await navigator.wakeLock.request('screen');
+        wakeLockWanted = true;
         document.getElementById('status').innerText = "Status: Wake Lock is active";
+        document.getElementById('wake-lock-btn').innerText = "Release Wake Lock";
         console.log('Wake Lock is active');
 
         wakeLock.addEventListener('release', () => {
           document.getElementById('status').innerText = "Status: Wake Lock was released";
+          document.getElementById('wake-lock-btn').innerText = "Enable Wake Lock";
           console.log('Wake Lock was released');
         });
       } catch (err) {
@@ -340,15 +351,29 @@
       }
     }
 
+    function releaseWakeLock() {
+      if (wakeLock && !wakeLock.released) {
+        wakeLock.release();
+      }
+      wakeLock = null;
+      wakeLockWanted = false;
+    }
+
+    function toggleWakeLock() {
+      if (wakeLock && !wakeLock.released) {
+        releaseWakeLock();
+      } else {
+        requestWakeLock();
+      }
+    }
+
     // Window Management
     function showWindow(id) {
-      const window = document.getElementById(id);
-      window.classList.remove('hidden');
+      const win = document.getElementById(id);
+      win.classList.remove('hidden');
       activeWindows.add(id);
-      // Bring to front
-      const windows = document.querySelectorAll('.window');
-      windows.forEach(w => w.style.zIndex = '1');
-      window.style.zIndex = '2';
+      zIndexCounter++;
+      win.style.zIndex = zIndexCounter;
       updateTaskbar();
     }
 
@@ -365,14 +390,42 @@
     }
 
     function maximizeWindow(id) {
-      const window = document.getElementById(id);
-      window.classList.toggle('maximized');
+      const win = document.getElementById(id);
+      if (win.classList.contains('maximized')) {
+        win.classList.remove('maximized');
+        win.style.width = win.dataset.prevWidth || '';
+        win.style.height = win.dataset.prevHeight || '';
+        win.style.top = win.dataset.prevTop || '';
+        win.style.left = win.dataset.prevLeft || '';
+        win.style.margin = win.dataset.prevMargin || '';
+      } else {
+        win.dataset.prevWidth = win.style.width;
+        win.dataset.prevHeight = win.style.height;
+        win.dataset.prevTop = win.style.top;
+        win.dataset.prevLeft = win.style.left;
+        win.dataset.prevMargin = win.style.margin;
+        win.classList.add('maximized');
+      }
+      zIndexCounter++;
+      win.style.zIndex = zIndexCounter;
+    }
+
+    function getWindowName(id) {
+      const names = {
+        'wake-Lock': 'Wake Lock',
+        'calculator': 'Calculator',
+        'notepad': 'Notepad',
+        'timer': 'Timer'
+      };
+      return names[id] || id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
 
     function updateTaskbar() {
-      const taskbarWindows = Array.from(activeWindows).map(id => 
-        `<button onclick="showWindow('${id}')">${id.replace('-', ' ')}</button>`
-      ).join('');
+      const taskbarWindows = Array.from(activeWindows).map(id => {
+        const win = document.getElementById(id);
+        const activeClass = win.classList.contains('hidden') ? '' : 'active';
+        return `<button class="${activeClass}" onclick="showWindow('${id}')">${getWindowName(id)}</button>`;
+      }).join('');
       document.getElementById('active-windows').innerHTML = taskbarWindows;
     }
 
@@ -461,6 +514,7 @@
 
     async function requestTimerWakeLock() {
       if (!('wakeLock' in navigator)) return;
+      if (timerWakeLock && !timerWakeLock.released) return;
       try {
         timerWakeLock = await navigator.wakeLock.request('screen');
       } catch (err) {
@@ -471,7 +525,7 @@
     function releaseTimerWakeLock() {
       if (timerWakeLock) {
         try {
-          timerWakeLock.release();
+          if (!timerWakeLock.released) timerWakeLock.release();
         } catch (err) {
           console.error('Timer wake lock release failed:', err);
         }
@@ -516,8 +570,16 @@
       // Initialize wake lock button
       const wakeLockBtn = document.getElementById('wake-lock-btn');
       if (wakeLockBtn) {
-        wakeLockBtn.addEventListener('click', requestWakeLock);
+        wakeLockBtn.addEventListener('click', toggleWakeLock);
       }
+
+      // Re-acquire wake locks when returning to the tab
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          if (wakeLockWanted) requestWakeLock();
+          if (timerInterval) requestTimerWakeLock();
+        }
+      });
 
       // Initialize clock
       setInterval(updateClock, 1000);
@@ -565,9 +627,8 @@
 
         // Bring window to front when clicked
         window.addEventListener('mousedown', function() {
-          const windows = document.querySelectorAll('.window');
-          windows.forEach(w => w.style.zIndex = '1');
-          window.style.zIndex = '2';
+          zIndexCounter++;
+          window.style.zIndex = zIndexCounter;
         });
       });
     });
@@ -577,6 +638,7 @@
       
       currentWindow = e.target.closest('.window');
       if (!currentWindow) return;
+      if (currentWindow.classList.contains('maximized')) return;
 
       isDragging = true;
       

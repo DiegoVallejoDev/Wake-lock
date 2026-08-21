@@ -28,6 +28,14 @@
       <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/clock.png" alt="" width="32" height="32">
       <span>Timer</span>
     </button>
+    <button class="desktop-icon" data-window="tic-tac-toe" aria-label="Open Tic-Tac-Toe">
+      <span class="icon-emoji" aria-hidden="true">🎮</span>
+      <span>Tic-Tac-Toe</span>
+    </button>
+    <button class="desktop-icon" data-window="todo" aria-label="Open Todo List">
+      <span class="icon-emoji" aria-hidden="true">✅</span>
+      <span>Todo List</span>
+    </button>
   </main>
 
   <!-- Wake Lock Window -->
@@ -97,7 +105,9 @@
     </div>
     <div class="window-body">
       <textarea id="notepad-content" placeholder="Type your notes here..." aria-label="Notes"></textarea>
+      <div id="notepad-preview" class="notepad-preview" hidden></div>
       <div class="field-row" style="justify-content: flex-end;">
+        <button id="preview-toggle">Preview</button>
         <button id="clear-notes">Clear</button>
         <button id="save-notes">Save</button>
         <button id="download-notes" class="default">Download</button>
@@ -139,12 +149,50 @@
     </div>
   </section>
 
+  <!-- Tic-Tac-Toe Window -->
+  <section class="window hidden" id="tic-tac-toe" role="dialog" aria-labelledby="tictactoe-title">
+    <div class="title-bar">
+      <div class="title-bar-text" id="tictactoe-title">Tic-Tac-Toe - Retro Web Inc</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" data-action="minimize"></button>
+        <button aria-label="Maximize" data-action="maximize"></button>
+        <button aria-label="Close" data-action="close"></button>
+      </div>
+    </div>
+    <div class="window-body">
+      <p id="tictactoe-status" aria-live="polite">X's turn</p>
+      <div class="tic-tac-toe-board" id="tictactoe-board" role="group" aria-label="Tic-Tac-Toe board"></div>
+      <button id="tictactoe-reset">New Game</button>
+    </div>
+  </section>
+
+  <!-- Todo List Window -->
+  <section class="window hidden" id="todo" role="dialog" aria-labelledby="todo-title">
+    <div class="title-bar">
+      <div class="title-bar-text" id="todo-title">Todo List - Retro Web Inc</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" data-action="minimize"></button>
+        <button aria-label="Maximize" data-action="maximize"></button>
+        <button aria-label="Close" data-action="close"></button>
+      </div>
+    </div>
+    <div class="window-body">
+      <div class="field-row" style="gap: 8px;">
+        <input type="text" id="todo-input" placeholder="New task..." aria-label="New task" style="flex: 1;">
+        <button id="todo-add">Add</button>
+      </div>
+      <ul class="todo-list" id="todo-list" role="list"></ul>
+    </div>
+  </section>
+
   <!-- Start Menu -->
   <ul class="start-menu" id="start-menu" role="menu" aria-labelledby="start-btn">
     <li role="menuitem" tabindex="0" data-window="wake-Lock">Wake Lock</li>
     <li role="menuitem" tabindex="0" data-window="calculator">Calculator</li>
     <li role="menuitem" tabindex="0" data-window="notepad">Notepad</li>
     <li role="menuitem" tabindex="0" data-window="timer">Timer</li>
+    <li role="menuitem" tabindex="0" data-window="tic-tac-toe">Tic-Tac-Toe</li>
+    <li role="menuitem" tabindex="0" data-window="todo">Todo List</li>
   </ul>
 
   <!-- Taskbar -->

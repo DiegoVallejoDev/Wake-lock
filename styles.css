@@ -1,0 +1,322 @@
+:root {
+  --taskbar-height: 28px;
+  --desktop-padding: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #008080;
+  font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+  -webkit-font-smoothing: none;
+  overflow: hidden;
+}
+
+#desktop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: var(--desktop-padding);
+  padding-bottom: calc(var(--taskbar-height) + 16px);
+  height: 100%;
+  align-content: flex-start;
+}
+
+.desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80px;
+  padding: 8px 4px;
+  color: white;
+  background: transparent;
+  border: 1px dotted transparent;
+  cursor: pointer;
+  font-size: 11px;
+  text-align: center;
+  font-family: inherit;
+  -webkit-font-smoothing: none;
+  text-shadow: none;
+}
+
+.desktop-icon:hover,
+.desktop-icon:focus {
+  border-color: white;
+  outline: none;
+}
+
+.desktop-icon img,
+.desktop-icon .icon-emoji {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.desktop-icon span {
+  pointer-events: none;
+}
+
+.window {
+  position: absolute;
+  min-width: 240px;
+  max-width: calc(100vw - 12px);
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.window.hidden {
+  display: none;
+}
+
+.window.maximized {
+  width: calc(100vw - 6px) !important;
+  height: calc(100vh - var(--taskbar-height) - 6px) !important;
+  top: 0 !important;
+  left: 0 !important;
+  margin: 0 !important;
+}
+
+.title-bar {
+  cursor: move;
+}
+
+.title-bar-controls button {
+  cursor: pointer;
+}
+
+.title-bar-controls button:focus {
+  outline: 1px dotted #000;
+  outline-offset: -2px;
+}
+
+#wake-Lock {
+  top: 40px;
+  left: 40px;
+  width: 320px;
+}
+
+#calculator {
+  top: 40px;
+  left: 360px;
+  width: 220px;
+}
+
+#notepad {
+  top: 250px;
+  left: 40px;
+  width: 360px;
+}
+
+#timer {
+  top: 250px;
+  left: 360px;
+  width: 280px;
+}
+
+.window-body {
+  padding: 12px;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 4px 8px;
+  box-shadow: inset 0 1px #dfdfdf, inset 0 -1px #808080;
+  background: silver;
+  font-size: 11px;
+}
+
+#wake-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: grey;
+  flex-shrink: 0;
+}
+
+#wake-indicator.active {
+  background: limegreen;
+}
+
+.taskbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--taskbar-height);
+  background: #c0c0c0;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-top: 2px solid #fff;
+  box-shadow: inset 1px 0 #dfdfdf;
+  z-index: 10000;
+}
+
+.start-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  height: 22px;
+  font-weight: bold;
+}
+
+.start-button img {
+  width: 16px;
+  height: 16px;
+}
+
+.start-menu {
+  display: none;
+  position: fixed;
+  bottom: var(--taskbar-height);
+  left: 0;
+  background: #c0c0c0;
+  border-top: 2px solid #fff;
+  border-left: 2px solid #fff;
+  border-right: 2px solid #808080;
+  border-bottom: 2px solid #808080;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  z-index: 10001;
+  min-width: 200px;
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+}
+
+.start-menu.visible {
+  display: block;
+}
+
+.start-menu li {
+  padding: 8px 20px;
+  cursor: pointer;
+  font-size: 11px;
+  outline: none;
+}
+
+.start-menu li:hover,
+.start-menu li:focus {
+  background: #000080;
+  color: white;
+}
+
+#active-windows {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  flex: 1;
+  padding: 0 4px;
+}
+
+#active-windows button {
+  min-width: 100px;
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  padding: 0 6px;
+  height: 22px;
+}
+
+#active-windows button.active {
+  box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf,
+    inset 2px 2px grey;
+  text-shadow: 1px 1px #222;
+}
+
+.taskbar-clock {
+  margin-left: auto;
+  padding: 2px 8px;
+  border: inset 2px;
+  background: white;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.timer-display {
+  font-family: "Pixelated MS Sans Serif", monospace;
+  font-size: 2.4em;
+  text-align: center;
+  margin: 10px 0;
+}
+
+.timer-controls {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+
+#timer .field-row {
+  justify-content: center;
+}
+
+.calculator-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  padding: 10px 0;
+}
+
+.calculator-display {
+  width: 100%;
+  text-align: right;
+  padding: 5px;
+  font-family: "Pixelated MS Sans Serif", monospace;
+}
+
+.calculator-grid button {
+  min-width: auto;
+  padding: 0;
+}
+
+#notepad-content {
+  width: 100%;
+  height: 200px;
+  resize: none;
+}
+
+@media (max-width: 600px) {
+  #desktop {
+    justify-content: center;
+  }
+
+  .window {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: calc(100vw - 6px) !important;
+    height: calc(100vh - var(--taskbar-height) - 6px) !important;
+    margin: 0 !important;
+  }
+
+  .window .title-bar {
+    cursor: default;
+  }
+
+  #calculator,
+  #notepad,
+  #timer,
+  #wake-Lock {
+    left: 0 !important;
+    top: 0 !important;
+    width: calc(100vw - 6px) !important;
+  }
+}

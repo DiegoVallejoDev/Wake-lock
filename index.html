@@ -4,680 +4,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#c0c0c0" />
+  <meta name="theme-color" content="#008080" />
   <title>Retro Web Inc</title>
   <link rel="stylesheet" href="https://unpkg.com/98.css">
-  <style>
-    body {
-      background: #008080;
-      margin: 0;
-      padding: 10px;
-      font-family: "MS Sans Serif", sans-serif;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    .window {
-      width: 500px;
-      margin: 20px;
-      position: absolute;
-      top: 0;
-      left: 0;
-      background: silver;
-      box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
-      user-select: none; /* Prevent text selection while dragging */
-    }
-
-    .window.maximized {
-      width: calc(100% - 6px) !important;
-      height: calc(100vh - 45px) !important;
-      margin: 0 !important;
-      top: 0 !important;
-      left: 0 !important;
-    }
-
-    #calculator {
-      left: 530px;
-    }
-
-    #notepad {
-      top: 250px;
-    }
-
-    .window-content {
-      padding: 10px;
-      background: #c0c0c0;
-    }
-
-    .taskbar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 28px;
-      background: #c0c0c0;
-      padding: 3px;
-      display: flex;
-      align-items: center;
-      border-top: 2px solid #fff;
-      box-shadow: inset 1px 0 #dfdfdf;
-      z-index: 9999;
-    }
-
-    .start-button {
-      font-weight: bold;
-      margin-right: 10px;
-      padding: 3px 6px;
-      height: 22px;
-      display: flex;
-      align-items: center;
-    }
-
-    .taskbar-clock {
-      margin-left: auto;
-      margin-right: 10px;
-      padding: 2px 8px;
-      border: inset 2px;
-      background: white;
-    }
-
-    .desktop-icon {
-      text-align: center;
-      color: white;
-      margin: 20px;
-      cursor: pointer;
-      width: 75px;
-      float: left;
-    }
-
-    .desktop-icon img {
-      width: 32px;
-      height: 32px;
-      margin-bottom: 5px;
-    }
-
-    .menu {
-      display: none;
-      position: fixed;
-      bottom: 30px;
-      left: 0;
-      background: #c0c0c0;
-      border: 2px solid #000;
-      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-      z-index: 1000;
-      min-width: 200px;
-    }
-
-    .menu-item {
-      padding: 8px 20px;
-      cursor: pointer;
-    }
-
-    .menu-item:hover {
-      background: #000080;
-      color: white;
-    }
-
-    .calculator-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 5px;
-      padding: 10px;
-    }
-
-    .calculator-grid button {
-      padding: 10px;
-      width: 100%;
-    }
-
-    .calculator-display {
-      width: calc(100% - 10px);
-      margin-bottom: 10px;
-      text-align: right;
-      padding: 5px;
-    }
-
-    #notepad-content {
-      width: calc(100% - 10px);
-      height: 200px;
-      margin: 10px 0;
-      resize: none;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    #active-windows button {
-      margin-right: 5px;
-      padding: 3px 8px;
-      height: 22px;
-    }
-
-    .title-bar {
-      background: #000080;
-      padding: 3px 2px 3px 3px;
-      color: white;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: move; /* Add move cursor to indicate draggable */
-    }
-
-    .title-bar-text {
-      font-weight: bold;
-      margin-right: 24px;
-    }
-
-    .timer-display {
-      font-family: "MS Sans Serif", monospace;
-      font-size: 2.2em;
-      text-align: center;
-      margin: 10px 0;
-    }
-
-    .timer-controls {
-      display: flex;
-      justify-content: center;
-      gap: 5px;
-      margin: 8px 0;
-      flex-wrap: wrap;
-    }
-
-    #active-windows button.active {
-      border: inset 2px;
-      background: #d4d0c8;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-  <!-- Desktop Icons -->
-  <div class="desktop-icon" onclick="showWindow('wake-Lock')">
-    <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/utilities-terminal.png" alt="Wake Lock">
-    <div>Wake Lock</div>
-  </div>
-  <div class="desktop-icon" onclick="showWindow('calculator')">
-    <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/accessories-calculator.png" alt="Calculator">
-    <div>Calculator</div>
-  </div>
-  <div class="desktop-icon" onclick="showWindow('notepad')">
-    <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/accessories-text-editor.png" alt="Notepad">
-    <div>Notepad</div>
-  </div>
-  <div class="desktop-icon" onclick="showWindow('timer')">
-    <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/clock.png" alt="Timer">
-    <div>Timer</div>
-  </div>
+  <main id="desktop" aria-label="Desktop">
+    <button class="desktop-icon" data-window="wake-Lock" aria-label="Open Wake Lock">
+      <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/utilities-terminal.png" alt="" width="32" height="32">
+      <span>Wake Lock</span>
+    </button>
+    <button class="desktop-icon" data-window="calculator" aria-label="Open Calculator">
+      <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/accessories-calculator.png" alt="" width="32" height="32">
+      <span>Calculator</span>
+    </button>
+    <button class="desktop-icon" data-window="notepad" aria-label="Open Notepad">
+      <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/accessories-text-editor.png" alt="" width="32" height="32">
+      <span>Notepad</span>
+    </button>
+    <button class="desktop-icon" data-window="timer" aria-label="Open Timer">
+      <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/clock.png" alt="" width="32" height="32">
+      <span>Timer</span>
+    </button>
+  </main>
 
   <!-- Wake Lock Window -->
-  <div class="window hidden" id="wake-Lock">
+  <section class="window hidden" id="wake-Lock" role="dialog" aria-labelledby="wake-lock-title">
     <div class="title-bar">
-      <div class="title-bar-text">Wake Lock - Retro Web Inc</div>
+      <div class="title-bar-text" id="wake-lock-title">Wake Lock - Retro Web Inc</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('wake-Lock')"></button>
-        <button aria-label="Maximize" onclick="maximizeWindow('wake-Lock')"></button>
-        <button aria-label="Close" onclick="closeWindow('wake-Lock')"></button>
+        <button aria-label="Minimize" data-action="minimize"></button>
+        <button aria-label="Maximize" data-action="maximize"></button>
+        <button aria-label="Close" data-action="close"></button>
       </div>
     </div>
-    <div class="window-content">
+    <div class="window-body">
       <p>Welcome to Retro Web Inc Wake Lock!</p>
       <p>Click the button below to prevent your computer from sleeping.</p>
-      <button id="wake-lock-btn">Enable Wake Lock</button>
-      <p id="status">Status: Wake Lock is not active</p>
+      <button id="wake-lock-btn" class="default">Enable Wake Lock</button>
+      <div class="status-bar" aria-live="polite">
+        <span id="wake-indicator" aria-hidden="true"></span>
+        <span id="status">Status: Wake Lock is not active</span>
+      </div>
     </div>
-  </div>
+  </section>
 
   <!-- Calculator Window -->
-  <div class="window hidden" id="calculator">
+  <section class="window hidden" id="calculator" role="dialog" aria-labelledby="calc-title">
     <div class="title-bar">
-      <div class="title-bar-text">Calculator - Retro Web Inc</div>
+      <div class="title-bar-text" id="calc-title">Calculator - Retro Web Inc</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('calculator')"></button>
-        <button aria-label="Maximize" onclick="maximizeWindow('calculator')"></button>
-        <button aria-label="Close" onclick="closeWindow('calculator')"></button>
+        <button aria-label="Minimize" data-action="minimize"></button>
+        <button aria-label="Maximize" data-action="maximize"></button>
+        <button aria-label="Close" data-action="close"></button>
       </div>
     </div>
-    <div class="window-content">
-      <input type="text" class="calculator-display" id="calc-display" readonly>
+    <div class="window-body">
+      <input type="text" class="calculator-display" id="calc-display" readonly aria-label="Calculator display">
       <div class="calculator-grid">
-        <button onclick="appendNumber('7')">7</button>
-        <button onclick="appendNumber('8')">8</button>
-        <button onclick="appendNumber('9')">9</button>
-        <button onclick="appendOperator('+')">+</button>
-        <button onclick="appendNumber('4')">4</button>
-        <button onclick="appendNumber('5')">5</button>
-        <button onclick="appendNumber('6')">6</button>
-        <button onclick="appendOperator('-')">-</button>
-        <button onclick="appendNumber('1')">1</button>
-        <button onclick="appendNumber('2')">2</button>
-        <button onclick="appendNumber('3')">3</button>
-        <button onclick="appendOperator('*')">×</button>
-        <button onclick="appendNumber('0')">0</button>
-        <button onclick="appendNumber('.')">.</button>
-        <button onclick="calculate()">=</button>
-        <button onclick="appendOperator('/')">÷</button>
-        <button onclick="clearDisplay()">C</button>
+        <button class="calc-btn" data-type="num" data-value="7">7</button>
+        <button class="calc-btn" data-type="num" data-value="8">8</button>
+        <button class="calc-btn" data-type="num" data-value="9">9</button>
+        <button class="calc-btn" data-type="op" data-value="+">+</button>
+        <button class="calc-btn" data-type="num" data-value="4">4</button>
+        <button class="calc-btn" data-type="num" data-value="5">5</button>
+        <button class="calc-btn" data-type="num" data-value="6">6</button>
+        <button class="calc-btn" data-type="op" data-value="-">-</button>
+        <button class="calc-btn" data-type="num" data-value="1">1</button>
+        <button class="calc-btn" data-type="num" data-value="2">2</button>
+        <button class="calc-btn" data-type="num" data-value="3">3</button>
+        <button class="calc-btn" data-type="op" data-value="*">×</button>
+        <button class="calc-btn" data-type="num" data-value="0">0</button>
+        <button class="calc-btn" data-type="num" data-value=".">.</button>
+        <button class="calc-btn" data-type="eq" data-value="=">=</button>
+        <button class="calc-btn" data-type="op" data-value="/">÷</button>
+        <button class="calc-btn" data-type="clear" data-value="C" style="grid-column: span 4;">C</button>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- Notepad Window -->
-  <div class="window hidden" id="notepad">
+  <section class="window hidden" id="notepad" role="dialog" aria-labelledby="notepad-title">
     <div class="title-bar">
-      <div class="title-bar-text">Notepad - Retro Web Inc</div>
+      <div class="title-bar-text" id="notepad-title">Notepad - Retro Web Inc</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('notepad')"></button>
-        <button aria-label="Maximize" onclick="maximizeWindow('notepad')"></button>
-        <button aria-label="Close" onclick="closeWindow('notepad')"></button>
+        <button aria-label="Minimize" data-action="minimize"></button>
+        <button aria-label="Maximize" data-action="maximize"></button>
+        <button aria-label="Close" data-action="close"></button>
       </div>
     </div>
-    <div class="window-content">
-      <textarea id="notepad-content" placeholder="Type your notes here..."></textarea>
-      <button onclick="saveNotes()">Save</button>
-      <button onclick="clearNotes()">Clear</button>
+    <div class="window-body">
+      <textarea id="notepad-content" placeholder="Type your notes here..." aria-label="Notes"></textarea>
+      <div class="field-row" style="justify-content: flex-end;">
+        <button id="clear-notes">Clear</button>
+        <button id="save-notes">Save</button>
+        <button id="download-notes" class="default">Download</button>
+      </div>
     </div>
-  </div>
+  </section>
 
   <!-- Timer Window -->
-  <div class="window hidden" id="timer">
+  <section class="window hidden" id="timer" role="dialog" aria-labelledby="timer-title">
     <div class="title-bar">
-      <div class="title-bar-text">Timer - Retro Web Inc</div>
+      <div class="title-bar-text" id="timer-title">Timer - Retro Web Inc</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('timer')"></button>
-        <button aria-label="Maximize" onclick="maximizeWindow('timer')"></button>
-        <button aria-label="Close" onclick="closeWindow('timer')"></button>
+        <button aria-label="Minimize" data-action="minimize"></button>
+        <button aria-label="Maximize" data-action="maximize"></button>
+        <button aria-label="Close" data-action="close"></button>
       </div>
     </div>
-    <div class="window-content">
+    <div class="window-body">
       <p>Keep the screen awake while the timer runs.</p>
       <div class="timer-display" id="timer-display">00:00</div>
       <div class="timer-controls">
-        <button onclick="setTimer(60)">1m</button>
-        <button onclick="setTimer(300)">5m</button>
-        <button onclick="setTimer(1500)">25m</button>
+        <button class="preset" data-seconds="60">1m</button>
+        <button class="preset" data-seconds="300">5m</button>
+        <button class="preset" data-seconds="1500">25m</button>
+      </div>
+      <div class="field-row" style="justify-content: center; gap: 8px;">
+        <label for="timer-min">Min</label>
+        <input type="number" id="timer-min" min="0" max="999" value="0" style="width: 50px;">
+        <label for="timer-sec">Sec</label>
+        <input type="number" id="timer-sec" min="0" max="59" value="0" style="width: 50px;">
+        <button id="timer-custom">Set</button>
       </div>
       <div class="timer-controls">
-        <button id="timer-start" onclick="startTimer()">Start</button>
-        <button onclick="pauseTimer()">Pause</button>
-        <button onclick="resetTimer()">Reset</button>
+        <button id="timer-start">Start</button>
+        <button id="timer-pause">Pause</button>
+        <button id="timer-reset">Reset</button>
       </div>
-      <p id="timer-status">Ready</p>
+      <p id="timer-status" aria-live="polite">Ready</p>
     </div>
-  </div>
+  </section>
 
   <!-- Start Menu -->
-  <div class="menu" id="start-menu">
-    <div class="menu-item" onclick="showWindow('wake-Lock')">Wake Lock</div>
-    <div class="menu-item" onclick="showWindow('calculator')">Calculator</div>
-    <div class="menu-item" onclick="showWindow('notepad')">Notepad</div>
-    <div class="menu-item" onclick="showWindow('timer')">Timer</div>
-    <div class="menu-item" onclick="toggleStartMenu()">Exit</div>
-  </div>
+  <ul class="start-menu" id="start-menu" role="menu" aria-labelledby="start-btn">
+    <li role="menuitem" tabindex="0" data-window="wake-Lock">Wake Lock</li>
+    <li role="menuitem" tabindex="0" data-window="calculator">Calculator</li>
+    <li role="menuitem" tabindex="0" data-window="notepad">Notepad</li>
+    <li role="menuitem" tabindex="0" data-window="timer">Timer</li>
+  </ul>
 
   <!-- Taskbar -->
-  <div class="taskbar">
-    <button class="start-button" onclick="toggleStartMenu()">
-      <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Theme/Chicago95/misc/windows.png" width="16px" style="padding-right: .5em;padding-left: 1em;">
-      Start</button>
-    <span id="active-windows"></span>
-    <span class="taskbar-clock" id="clock">00:00</span>
-  </div>
+  <footer class="taskbar">
+    <button class="start-button" id="start-btn" aria-expanded="false" aria-pressed="false" aria-controls="start-menu">
+      <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Theme/Chicago95/misc/windows.png" alt="" width="16" height="16">
+      Start
+    </button>
+    <div id="active-windows" role="toolbar" aria-label="Active windows"></div>
+    <time class="taskbar-clock" id="clock">00:00</time>
+  </footer>
 
-  <script>
-    let wakeLock = null;
-    let wakeLockWanted = false;
-    let activeWindows = new Set();
-    let zIndexCounter = 10;
-
-    // Wake Lock
-    async function requestWakeLock() {
-      if (wakeLock && !wakeLock.released) return;
-      try {
-        wakeLock = await navigator.wakeLock.request('screen');
-        wakeLockWanted = true;
-        document.getElementById('status').innerText = "Status: Wake Lock is active";
-        document.getElementById('wake-lock-btn').innerText = "Release Wake Lock";
-        console.log('Wake Lock is active');
-
-        wakeLock.addEventListener('release', () => {
-          document.getElementById('status').innerText = "Status: Wake Lock was released";
-          document.getElementById('wake-lock-btn').innerText = "Enable Wake Lock";
-          console.log('Wake Lock was released');
-        });
-      } catch (err) {
-        document.getElementById('status').innerText = `Status: Error - ${err.message}`;
-        console.error(`Wake Lock request failed: ${err.name}, ${err.message}`);
-      }
-    }
-
-    function releaseWakeLock() {
-      if (wakeLock && !wakeLock.released) {
-        wakeLock.release();
-      }
-      wakeLock = null;
-      wakeLockWanted = false;
-    }
-
-    function toggleWakeLock() {
-      if (wakeLock && !wakeLock.released) {
-        releaseWakeLock();
-      } else {
-        requestWakeLock();
-      }
-    }
-
-    // Window Management
-    function showWindow(id) {
-      const win = document.getElementById(id);
-      win.classList.remove('hidden');
-      activeWindows.add(id);
-      zIndexCounter++;
-      win.style.zIndex = zIndexCounter;
-      updateTaskbar();
-    }
-
-    function closeWindow(id) {
-      document.getElementById(id).classList.add('hidden');
-      activeWindows.delete(id);
-      if (id === 'timer') pauseTimer();
-      updateTaskbar();
-    }
-
-    function minimizeWindow(id) {
-      document.getElementById(id).classList.add('hidden');
-      updateTaskbar();
-    }
-
-    function maximizeWindow(id) {
-      const win = document.getElementById(id);
-      if (win.classList.contains('maximized')) {
-        win.classList.remove('maximized');
-        win.style.width = win.dataset.prevWidth || '';
-        win.style.height = win.dataset.prevHeight || '';
-        win.style.top = win.dataset.prevTop || '';
-        win.style.left = win.dataset.prevLeft || '';
-        win.style.margin = win.dataset.prevMargin || '';
-      } else {
-        win.dataset.prevWidth = win.style.width;
-        win.dataset.prevHeight = win.style.height;
-        win.dataset.prevTop = win.style.top;
-        win.dataset.prevLeft = win.style.left;
-        win.dataset.prevMargin = win.style.margin;
-        win.classList.add('maximized');
-      }
-      zIndexCounter++;
-      win.style.zIndex = zIndexCounter;
-    }
-
-    function getWindowName(id) {
-      const names = {
-        'wake-Lock': 'Wake Lock',
-        'calculator': 'Calculator',
-        'notepad': 'Notepad',
-        'timer': 'Timer'
-      };
-      return names[id] || id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    }
-
-    function updateTaskbar() {
-      const taskbarWindows = Array.from(activeWindows).map(id => {
-        const win = document.getElementById(id);
-        const activeClass = win.classList.contains('hidden') ? '' : 'active';
-        return `<button class="${activeClass}" onclick="showWindow('${id}')">${getWindowName(id)}</button>`;
-      }).join('');
-      document.getElementById('active-windows').innerHTML = taskbarWindows;
-    }
-
-    // Start Menu
-    function toggleStartMenu() {
-      const menu = document.getElementById('start-menu');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
-
-    // Calculator
-    let displayValue = '';
-
-    function appendNumber(num) {
-      displayValue += num;
-      document.getElementById('calc-display').value = displayValue;
-    }
-
-    function appendOperator(op) {
-      displayValue += ` ${op} `;
-      document.getElementById('calc-display').value = displayValue;
-    }
-
-    function calculate() {
-      try {
-        displayValue = eval(displayValue).toString();
-        document.getElementById('calc-display').value = displayValue;
-      } catch (err) {
-        displayValue = 'Error';
-        document.getElementById('calc-display').value = displayValue;
-      }
-    }
-
-    function clearDisplay() {
-      displayValue = '';
-      document.getElementById('calc-display').value = displayValue;
-    }
-
-    // Notepad
-    function saveNotes() {
-      const content = document.getElementById('notepad-content').value;
-      localStorage.setItem('notepad-content', content);
-      alert('Notes saved!');
-    }
-
-    function clearNotes() {
-      document.getElementById('notepad-content').value = '';
-      localStorage.removeItem('notepad-content');
-    }
-
-    // Clock
-    function updateClock() {
-      const now = new Date();
-      const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      document.getElementById('clock').innerText = `${hours}:${minutes}`;
-    }
-
-    // Timer
-    let timerInterval = null;
-    let timerRemaining = 0;
-    let timerTotal = 0;
-    let timerWakeLock = null;
-
-    function formatTimerTime(seconds) {
-      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-      const s = (seconds % 60).toString().padStart(2, '0');
-      return `${m}:${s}`;
-    }
-
-    function updateTimerDisplay() {
-      document.getElementById('timer-display').innerText = formatTimerTime(timerRemaining);
-    }
-
-    function updateTimerStatus(message) {
-      const statusEl = document.getElementById('timer-status');
-      if (statusEl) statusEl.innerText = message;
-    }
-
-    function setTimer(seconds) {
-      pauseTimer();
-      timerRemaining = seconds;
-      timerTotal = seconds;
-      updateTimerDisplay();
-      updateTimerStatus('Ready');
-    }
-
-    async function requestTimerWakeLock() {
-      if (!('wakeLock' in navigator)) return;
-      if (timerWakeLock && !timerWakeLock.released) return;
-      try {
-        timerWakeLock = await navigator.wakeLock.request('screen');
-      } catch (err) {
-        console.error('Timer wake lock request failed:', err);
-      }
-    }
-
-    function releaseTimerWakeLock() {
-      if (timerWakeLock) {
-        try {
-          if (!timerWakeLock.released) timerWakeLock.release();
-        } catch (err) {
-          console.error('Timer wake lock release failed:', err);
-        }
-        timerWakeLock = null;
-      }
-    }
-
-    function startTimer() {
-      if (timerRemaining <= 0) return;
-      if (timerInterval) clearInterval(timerInterval);
-      releaseTimerWakeLock();
-      updateTimerStatus('Running...');
-      requestTimerWakeLock();
-      timerInterval = setInterval(() => {
-        timerRemaining--;
-        updateTimerDisplay();
-        if (timerRemaining <= 0) {
-          pauseTimer();
-          updateTimerStatus("Time's up!");
-        }
-      }, 1000);
-    }
-
-    function pauseTimer() {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
-      releaseTimerWakeLock();
-      updateTimerStatus(timerRemaining > 0 ? 'Paused' : 'Finished');
-    }
-
-    function resetTimer() {
-      pauseTimer();
-      timerRemaining = timerTotal;
-      updateTimerDisplay();
-      updateTimerStatus('Ready');
-    }
-
-    // Event Listeners and Initialization
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize wake lock button
-      const wakeLockBtn = document.getElementById('wake-lock-btn');
-      if (wakeLockBtn) {
-        wakeLockBtn.addEventListener('click', toggleWakeLock);
-      }
-
-      // Re-acquire wake locks when returning to the tab
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          if (wakeLockWanted) requestWakeLock();
-          if (timerInterval) requestTimerWakeLock();
-        }
-      });
-
-      // Initialize clock
-      setInterval(updateClock, 1000);
-      updateClock();
-
-      // Load saved notes
-      const savedNotes = localStorage.getItem('notepad-content');
-      if (savedNotes) {
-        document.getElementById('notepad-content').value = savedNotes;
-      }
-
-      // Initialize timer with a default 5-minute countdown
-      setTimer(300);
-
-      // Close start menu when clicking outside
-      document.addEventListener('click', function(event) {
-        const startMenu = document.getElementById('start-menu');
-        const startButton = document.querySelector('.start-button');
-        if (!startButton.contains(event.target) && !startMenu.contains(event.target)) {
-          startMenu.style.display = 'none';
-        }
-      });
-    });
-
-     // Add dragging functionality
-    let isDragging = false;
-    let currentWindow = null;
-    let initialX;
-    let initialY;
-    let xOffset = 0;
-    let yOffset = 0;
-
-    // Initialize draggable windows
-    document.addEventListener('DOMContentLoaded', function() {
-      // Previous initialization code remains
-
-      // Add event listeners for all windows
-      const windows = document.querySelectorAll('.window');
-      windows.forEach(window => {
-        const titleBar = window.querySelector('.title-bar');
-        
-        titleBar.addEventListener('mousedown', startDragging);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', stopDragging);
-
-        // Bring window to front when clicked
-        window.addEventListener('mousedown', function() {
-          zIndexCounter++;
-          window.style.zIndex = zIndexCounter;
-        });
-      });
-    });
-
-    function startDragging(e) {
-      if (e.target.tagName === 'BUTTON') return; // Don't drag if clicking window controls
-      
-      currentWindow = e.target.closest('.window');
-      if (!currentWindow) return;
-      if (currentWindow.classList.contains('maximized')) return;
-
-      isDragging = true;
-      
-      // Get initial mouse coordinates
-      initialX = e.clientX - currentWindow.offsetLeft;
-      initialY = e.clientY - currentWindow.offsetTop;
-
-      // Add a dragging class for visual feedback
-      currentWindow.classList.add('dragging');
-    }
-
-    function drag(e) {
-      if (!isDragging) return;
-
-      e.preventDefault();
-
-      // Calculate new position
-      const newX = e.clientX - initialX;
-      const newY = e.clientY - initialY;
-
-      // Ensure window stays within viewport bounds
-      const maxX = window.innerWidth - currentWindow.offsetWidth;
-      const maxY = window.innerHeight - currentWindow.offsetHeight - 28; // Account for taskbar
-
-      const boundedX = Math.min(Math.max(0, newX), maxX);
-      const boundedY = Math.min(Math.max(0, newY), maxY);
-
-      // Update window position
-      currentWindow.style.left = boundedX + 'px';
-      currentWindow.style.top = boundedY + 'px';
-    }
-
-    function stopDragging() {
-      isDragging = false;
-      if (currentWindow) {
-        currentWindow.classList.remove('dragging');
-        currentWindow = null;
-      }
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
+
 </html>

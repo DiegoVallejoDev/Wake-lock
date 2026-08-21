@@ -122,6 +122,15 @@ body {
   top: 250px;
   left: 40px;
   width: 360px;
+  display: flex;
+  flex-direction: column;
+}
+
+#notepad .window-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 #timer {
@@ -370,13 +379,16 @@ body {
 
 #notepad-content {
   width: 100%;
-  height: 200px;
-  resize: none;
+  min-height: 200px;
+  resize: vertical;
+  flex: 1;
+  margin-bottom: 8px;
+  overflow: auto;
 }
 
 .notepad-preview {
   width: 100%;
-  height: 200px;
+  min-height: 200px;
   overflow: auto;
   background: #fff;
   border: inset 2px;
@@ -385,6 +397,7 @@ body {
   font-family: inherit;
   font-size: 13px;
   white-space: normal;
+  flex: 1;
 }
 
 .notepad-preview h1,
@@ -421,6 +434,45 @@ body {
 .notepad-preview pre code {
   background: transparent;
   padding: 0;
+}
+
+.notepad-preview pre {
+  white-space: pre;
+}
+
+.notepad-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.5em;
+}
+
+.notepad-preview th,
+.notepad-preview td {
+  border: 1px solid #808080;
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.notepad-preview th {
+  background: #eee;
+  font-weight: bold;
+}
+
+.notepad-preview blockquote {
+  border-left: 3px solid #808080;
+  margin: 0 0 0.5em;
+  padding-left: 12px;
+  color: #555;
+}
+
+.notepad-preview hr {
+  border: none;
+  border-top: 1px solid #808080;
+  margin: 0.5em 0;
+}
+
+.notepad-preview img {
+  max-width: 100%;
 }
 
 @media (max-width: 600px) {

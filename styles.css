@@ -38,7 +38,8 @@ body {
   padding: 8px 4px;
   color: white;
   background: transparent;
-  border: 1px dotted transparent;
+  border: none;
+  box-shadow: none;
   cursor: pointer;
   font-size: 11px;
   text-align: center;
@@ -49,7 +50,7 @@ body {
 
 .desktop-icon:hover,
 .desktop-icon:focus {
-  border-color: white;
+  background: #000080;
   outline: none;
 }
 

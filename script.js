@@ -332,12 +332,36 @@
     const blocks = [];
     let i = 0;
 
+    function isTableSeparator(s) {
+      const cells = s.trim().split('|').slice(1, -1);
+      return cells.length > 0 && cells.every((cell) => /^:?-+:?$/.test(cell.trim()));
+    }
+
+    function splitTableCells(s) {
+      return s
+        .trim()
+        .replace(/^\|/, '')
+        .replace(/\|$/, '')
+        .split('|')
+        .map((cell) => cell.trim());
+    }
+
+    function tableAlign(sep) {
+      return splitTableCells(sep).map((cell) => {
+        const c = cell.trim();
+        if (c.startsWith(':') && c.endsWith(':')) return 'center';
+        if (c.endsWith(':')) return 'right';
+        return 'left';
+      });
+    }
+
     function inline(s) {
       return s
         .replace(/`([^`]+)`/g, '<code>$1</code>')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
         .replace(/~~(.+?)~~/g, '<del>$1</del>')
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">')
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
     }
 
@@ -361,6 +385,59 @@
         const n = h[1].length;
         blocks.push(`<h${n}>${inline(h[2])}</h${n}>`);
         i++;
+        continue;
+      }
+
+      if (/^(---|\*\*\*|___)\s*$/.test(line.trim())) {
+        blocks.push('<hr>');
+        i++;
+        continue;
+      }
+
+      if (/^&gt;\s?(.*)$/.test(line)) {
+        const quoteLines = [];
+        while (i < lines.length && /^&gt;\s?(.*)$/.test(lines[i])) {
+          const m = lines[i].match(/^&gt;\s?(.*)$/);
+          quoteLines.push(m[1]);
+          i++;
+        }
+        const content = quoteLines.map(inline).join('<br>');
+        blocks.push(`<blockquote><p>${content}</p></blockquote>`);
+        continue;
+      }
+
+      const trimmed = line.trim();
+      if (
+        trimmed.startsWith('|') &&
+        trimmed.endsWith('|') &&
+        i + 1 < lines.length &&
+        isTableSeparator(lines[i + 1])
+      ) {
+        const tableLines = [];
+        while (
+          i < lines.length &&
+          lines[i].trim().startsWith('|') &&
+          lines[i].trim().endsWith('|')
+        ) {
+          tableLines.push(lines[i].trim());
+          i++;
+        }
+
+        const headerCells = splitTableCells(tableLines[0]);
+        const align = tableAlign(tableLines[1]);
+        const thead = '<thead><tr>' + headerCells
+          .map((cell, idx) => `<th style="text-align:${align[idx] || 'left'}">${inline(cell)}</th>`)
+          .join('') + '</tr></thead>';
+
+        const tbody = [];
+        for (let r = 2; r < tableLines.length; r++) {
+          const cells = splitTableCells(tableLines[r]);
+          tbody.push('<tr>' + headerCells
+            .map((_, idx) => `<td style="text-align:${align[idx] || 'left'}">${inline(cells[idx] || '')}</td>`)
+            .join('') + '</tr>');
+        }
+
+        blocks.push('<table>' + thead + '<tbody>' + tbody.join('') + '</tbody></table>');
         continue;
       }
 

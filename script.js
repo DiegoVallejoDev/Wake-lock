@@ -11,6 +11,9 @@
     dragOffset: { x: 0, y: 0 },
     timer: { interval: null, remaining: 0, total: 0, wakeLock: null },
     calculator: { display: '' },
+    tictactoe: { board: Array(9).fill(''), current: 'X', winner: null },
+    todos: [],
+    notepadPreview: false,
   };
 
   const windows = {
@@ -18,6 +21,8 @@
     calculator: { name: 'Calculator', default: { top: 40, left: 360 } },
     notepad: { name: 'Notepad', default: { top: 250, left: 40 } },
     timer: { name: 'Timer', default: { top: 250, left: 360 } },
+    'tic-tac-toe': { name: 'Tic-Tac-Toe', default: { top: 40, left: 680 } },
+    todo: { name: 'Todo List', default: { top: 250, left: 680 } },
   };
 
   function $(sel) {
@@ -295,6 +300,7 @@
   function clearNotes() {
     $('#notepad-content').value = '';
     localStorage.removeItem('notepad-content');
+    renderNotepadPreview();
   }
 
   function downloadNotes() {
@@ -308,6 +314,255 @@
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  }
+
+  // --- Markdown Preview ---
+
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function parseMarkdown(text) {
+    if (!text) return '';
+    const escaped = escapeHtml(text);
+    const lines = escaped.split(/\r?\n/);
+    const blocks = [];
+    let i = 0;
+
+    function inline(s) {
+      return s
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/~~(.+?)~~/g, '<del>$1</del>')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    }
+
+    while (i < lines.length) {
+      const line = lines[i];
+
+      if (line.trim() === '```') {
+        i++;
+        const code = [];
+        while (i < lines.length && lines[i].trim() !== '```') {
+          code.push(lines[i]);
+          i++;
+        }
+        blocks.push('<pre><code>' + code.join('\n') + '</code></pre>');
+        i++;
+        continue;
+      }
+
+      const h = line.match(/^(#{1,6})\s+(.*)$/);
+      if (h) {
+        const n = h[1].length;
+        blocks.push(`<h${n}>${inline(h[2])}</h${n}>`);
+        i++;
+        continue;
+      }
+
+      if (/^[-*]\s+(.*)$/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^[-*]\s+(.*)$/.test(lines[i])) {
+          const m = lines[i].match(/^[-*]\s+(.*)$/);
+          items.push(inline(m[1]));
+          i++;
+        }
+        blocks.push('<ul>' + items.map((item) => `<li>${item}</li>`).join('') + '</ul>');
+        continue;
+      }
+
+      if (/^\d+\.\s+(.*)$/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+(.*)$/.test(lines[i])) {
+          const m = lines[i].match(/^\d+\.\s+(.*)$/);
+          items.push(inline(m[1]));
+          i++;
+        }
+        blocks.push('<ol>' + items.map((item) => `<li>${item}</li>`).join('') + '</ol>');
+        continue;
+      }
+
+      if (line.trim() === '') {
+        i++;
+        continue;
+      }
+
+      blocks.push('<p>' + inline(line) + '</p>');
+      i++;
+    }
+
+    return blocks.join('');
+  }
+
+  function renderNotepadPreview() {
+    const textarea = $('#notepad-content');
+    const preview = $('#notepad-preview');
+    const btn = $('#preview-toggle');
+    if (!textarea || !preview || !btn) return;
+
+    if (state.notepadPreview) {
+      preview.innerHTML = parseMarkdown(textarea.value);
+      preview.hidden = false;
+      textarea.hidden = true;
+      btn.textContent = 'Edit';
+    } else {
+      preview.hidden = true;
+      textarea.hidden = false;
+      btn.textContent = 'Preview';
+    }
+  }
+
+  function toggleNotepadPreview() {
+    state.notepadPreview = !state.notepadPreview;
+    renderNotepadPreview();
+  }
+
+  // --- Tic-Tac-Toe ---
+
+  const WINNING_LINES = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6],
+  ];
+
+  function checkTicTacToeWinner() {
+    const { board } = state.tictactoe;
+    for (const [a, b, c] of WINNING_LINES) {
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+        return board[a];
+      }
+    }
+    return null;
+  }
+
+  function updateTicTacToeStatus() {
+    const el = $('#tictactoe-status');
+    if (!el) return;
+    if (state.tictactoe.winner) {
+      el.textContent = state.tictactoe.winner === 'draw'
+        ? "It's a draw!"
+        : `${state.tictactoe.winner} wins!`;
+      return;
+    }
+    if (state.tictactoe.board.every((cell) => cell !== '')) {
+      state.tictactoe.winner = 'draw';
+      el.textContent = "It's a draw!";
+      return;
+    }
+    el.textContent = `${state.tictactoe.current}'s turn`;
+  }
+
+  function renderTicTacToeBoard() {
+    const board = $('#tictactoe-board');
+    if (!board) return;
+    board.innerHTML = '';
+    const { winner } = state.tictactoe;
+    state.tictactoe.board.forEach((cell, index) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = cell;
+      btn.setAttribute('data-index', index);
+      btn.setAttribute('aria-label', `Cell ${index + 1}${cell ? `, ${cell}` : ''}`);
+      btn.disabled = !!cell || !!winner;
+      board.appendChild(btn);
+    });
+    updateTicTacToeStatus();
+  }
+
+  function handleTicTacToeClick(index) {
+    const { board, current } = state.tictactoe;
+    if (board[index] || state.tictactoe.winner) return;
+
+    board[index] = current;
+    const winner = checkTicTacToeWinner();
+    if (winner) {
+      state.tictactoe.winner = winner;
+    } else {
+      state.tictactoe.current = current === 'X' ? 'O' : 'X';
+    }
+
+    renderTicTacToeBoard();
+  }
+
+  function resetTicTacToe() {
+    state.tictactoe = { board: Array(9).fill(''), current: 'X', winner: null };
+    renderTicTacToeBoard();
+  }
+
+  // --- Todo List ---
+
+  function loadTodos() {
+    try {
+      const data = localStorage.getItem('todos');
+      state.todos = data ? JSON.parse(data) : [];
+    } catch (err) {
+      state.todos = [];
+    }
+  }
+
+  function saveTodos() {
+    localStorage.setItem('todos', JSON.stringify(state.todos));
+  }
+
+  function renderTodos() {
+    const list = $('#todo-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    state.todos.forEach((todo, index) => {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'listitem');
+      if (todo.done) li.classList.add('done');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = todo.done;
+      checkbox.setAttribute('data-index', index);
+      checkbox.setAttribute('aria-label', `Mark ${todo.text} as ${todo.done ? 'incomplete' : 'complete'}`);
+
+      const span = document.createElement('span');
+      span.textContent = todo.text;
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.textContent = '×';
+      delBtn.setAttribute('data-action', 'delete');
+      delBtn.setAttribute('data-index', index);
+      delBtn.setAttribute('aria-label', `Delete ${todo.text}`);
+
+      li.appendChild(checkbox);
+      li.appendChild(span);
+      li.appendChild(delBtn);
+      list.appendChild(li);
+    });
+  }
+
+  function addTodo() {
+    const input = $('#todo-input');
+    const text = input.value.trim();
+    if (!text) return;
+    state.todos.push({ text, done: false });
+    input.value = '';
+    renderTodos();
+    saveTodos();
+  }
+
+  function toggleTodo(index) {
+    if (index < 0 || index >= state.todos.length) return;
+    state.todos[index].done = !state.todos[index].done;
+    renderTodos();
+    saveTodos();
+  }
+
+  function deleteTodo(index) {
+    if (index < 0 || index >= state.todos.length) return;
+    state.todos.splice(index, 1);
+    renderTodos();
+    saveTodos();
   }
 
   // --- Timer ---
@@ -537,6 +792,33 @@
     $('#save-notes').addEventListener('click', saveNotes);
     $('#clear-notes').addEventListener('click', clearNotes);
     $('#download-notes').addEventListener('click', downloadNotes);
+    $('#preview-toggle').addEventListener('click', toggleNotepadPreview);
+
+    // Tic-Tac-Toe
+    $('#tictactoe-reset').addEventListener('click', resetTicTacToe);
+    $('#tictactoe-board').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-index]');
+      if (!btn) return;
+      handleTicTacToeClick(parseInt(btn.dataset.index, 10));
+    });
+    renderTicTacToeBoard();
+
+    // Todo List
+    $('#todo-add').addEventListener('click', addTodo);
+    $('#todo-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addTodo();
+    });
+    $('#todo-list').addEventListener('change', (e) => {
+      if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+        toggleTodo(parseInt(e.target.dataset.index, 10));
+      }
+    });
+    $('#todo-list').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action="delete"]');
+      if (btn) deleteTodo(parseInt(btn.dataset.index, 10));
+    });
+    loadTodos();
+    renderTodos();
 
     // Timer
     $('#timer-start').addEventListener('click', startTimer);

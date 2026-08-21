@@ -67,6 +67,13 @@ body {
   pointer-events: none;
 }
 
+.desktop-icon .icon-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
 .window {
   position: absolute;
   min-width: 240px;
@@ -121,6 +128,79 @@ body {
   top: 250px;
   left: 360px;
   width: 280px;
+}
+
+#tic-tac-toe {
+  top: 40px;
+  left: 680px;
+  width: 220px;
+}
+
+#tictactoe-status {
+  text-align: center;
+  margin-bottom: 12px;
+  font-weight: bold;
+}
+
+.tic-tac-toe-board {
+  display: grid;
+  grid-template-columns: repeat(3, 52px);
+  grid-template-rows: repeat(3, 52px);
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.tic-tac-toe-board button {
+  width: 52px;
+  height: 52px;
+  min-width: auto;
+  min-height: auto;
+  padding: 0;
+  color: #000;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+#todo {
+  top: 250px;
+  left: 680px;
+  width: 300px;
+}
+
+.todo-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.todo-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px;
+  border-bottom: 1px solid #c0c0c0;
+}
+
+.todo-list li span {
+  flex: 1;
+  word-break: break-word;
+}
+
+.todo-list li.done span {
+  text-decoration: line-through;
+  color: #555;
+}
+
+.todo-list li input[type="checkbox"] {
+  flex-shrink: 0;
+}
+
+.todo-list li button {
+  min-width: auto;
+  padding: 0 6px;
 }
 
 .window-body {
@@ -294,6 +374,55 @@ body {
   resize: none;
 }
 
+.notepad-preview {
+  width: 100%;
+  height: 200px;
+  overflow: auto;
+  background: #fff;
+  border: inset 2px;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  white-space: normal;
+}
+
+.notepad-preview h1,
+.notepad-preview h2,
+.notepad-preview h3,
+.notepad-preview h4,
+.notepad-preview h5,
+.notepad-preview h6 {
+  margin: 0.5em 0;
+}
+
+.notepad-preview p {
+  margin: 0 0 0.5em;
+}
+
+.notepad-preview ul,
+.notepad-preview ol {
+  padding-left: 20px;
+  margin: 0 0 0.5em;
+}
+
+.notepad-preview code {
+  background: #eee;
+  padding: 1px 2px;
+}
+
+.notepad-preview pre {
+  background: #eee;
+  padding: 8px;
+  overflow: auto;
+  margin: 0 0 0.5em;
+}
+
+.notepad-preview pre code {
+  background: transparent;
+  padding: 0;
+}
+
 @media (max-width: 600px) {
   #desktop {
     justify-content: center;
@@ -315,7 +444,9 @@ body {
   #calculator,
   #notepad,
   #timer,
-  #wake-Lock {
+  #wake-Lock,
+  #tic-tac-toe,
+  #todo {
     left: 0 !important;
     top: 0 !important;
     width: calc(100vw - 6px) !important;

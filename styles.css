@@ -122,6 +122,9 @@ body {
   top: 250px;
   left: 40px;
   width: 360px;
+}
+
+#notepad:not(.hidden) {
   display: flex;
   flex-direction: column;
 }

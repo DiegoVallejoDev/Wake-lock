@@ -66,18 +66,18 @@ body {
   padding: 8px 4px;
 }
 
-.desktop-icon > span:last-child {
+.desktop-icon>span:last-child {
   max-width: 100%;
   padding: 2px 3px;
   line-height: 15px;
   overflow-wrap: break-word;
 }
 
-.desktop-icon.selected > span:last-child {
+.desktop-icon.selected>span:last-child {
   background: #000080;
 }
 
-.desktop-icon:focus > span:last-child {
+.desktop-icon:focus>span:last-child {
   outline: 1px dotted #fff;
   outline-offset: -1px;
 }
@@ -86,7 +86,7 @@ body {
   filter: grayscale(1) brightness(0.65) sepia(1) hue-rotate(170deg) saturate(5);
 }
 
-#desktop:not(:focus-within) .desktop-icon.selected > span:last-child {
+#desktop:not(:focus-within) .desktop-icon.selected>span:last-child {
   background: #c0c0c0;
   color: #000;
 }

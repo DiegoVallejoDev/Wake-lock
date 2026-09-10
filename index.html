@@ -29,11 +29,11 @@
       <span>Timer</span>
     </button>
     <button class="desktop-icon" data-window="tic-tac-toe" aria-label="Open Tic-Tac-Toe">
-      <span class="icon-emoji" aria-hidden="true">🎮</span>
+      <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/categories/32/applications-games.png" alt="" width="32" height="32" draggable="false">
       <span>Tic-Tac-Toe</span>
     </button>
     <button class="desktop-icon" data-window="todo" aria-label="Open Todo List">
-      <span class="icon-emoji" aria-hidden="true">✅</span>
+      <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Icons/Chicago95/apps/32/checkbox.png" alt="" width="32" height="32" draggable="false">
       <span>Todo List</span>
     </button>
   </main>
@@ -49,9 +49,7 @@
       </div>
     </div>
     <div class="window-body">
-      <p>Welcome to Retro Web Inc Wake Lock!</p>
-      <p>Click the button below to prevent your computer from sleeping.</p>
-      <button id="wake-lock-btn" class="default">Enable Wake Lock</button>
+      <button id="wake-lock-btn" class="default" aria-pressed="false">Enable Wake Lock</button>
       <div class="status-bar" aria-live="polite">
         <span id="wake-indicator" aria-hidden="true"></span>
         <span id="status">Status: Wake Lock is not active</span>
@@ -107,7 +105,7 @@
       <textarea id="notepad-content" placeholder="Type your notes here..." aria-label="Notes"></textarea>
       <div id="notepad-preview" class="notepad-preview" hidden></div>
       <div class="field-row" style="justify-content: flex-end;">
-        <button id="preview-toggle">Preview</button>
+        <button id="preview-toggle" aria-pressed="false">Preview</button>
         <button id="clear-notes">Clear</button>
         <button id="save-notes">Save</button>
         <button id="download-notes" class="default">Download</button>
@@ -126,7 +124,6 @@
       </div>
     </div>
     <div class="window-body">
-      <p>Keep the screen awake while the timer runs.</p>
       <div class="timer-display" id="timer-display">00:00</div>
       <div class="timer-controls">
         <button class="preset" data-seconds="60">1m</button>
@@ -186,18 +183,21 @@
   </section>
 
   <!-- Start Menu -->
-  <ul class="start-menu" id="start-menu" role="menu" aria-labelledby="start-btn">
-    <li role="menuitem" tabindex="0" data-window="wake-Lock">Wake Lock</li>
-    <li role="menuitem" tabindex="0" data-window="calculator">Calculator</li>
-    <li role="menuitem" tabindex="0" data-window="notepad">Notepad</li>
-    <li role="menuitem" tabindex="0" data-window="timer">Timer</li>
-    <li role="menuitem" tabindex="0" data-window="tic-tac-toe">Tic-Tac-Toe</li>
-    <li role="menuitem" tabindex="0" data-window="todo">Todo List</li>
-  </ul>
+  <nav class="start-menu" id="start-menu" aria-labelledby="start-btn">
+    <div class="start-menu-brand" aria-hidden="true"><strong>Retro Web</strong><span>98</span></div>
+    <ul role="menu" aria-labelledby="start-btn">
+      <li role="menuitem" tabindex="-1" data-window="wake-Lock">Wake Lock</li>
+      <li role="menuitem" tabindex="-1" data-window="calculator">Calculator</li>
+      <li role="menuitem" tabindex="-1" data-window="notepad">Notepad</li>
+      <li role="menuitem" tabindex="-1" data-window="timer">Timer</li>
+      <li role="menuitem" tabindex="-1" data-window="tic-tac-toe">Tic-Tac-Toe</li>
+      <li role="menuitem" tabindex="-1" data-window="todo">Todo List</li>
+    </ul>
+  </nav>
 
   <!-- Taskbar -->
   <footer class="taskbar">
-    <button class="start-button" id="start-btn" aria-expanded="false" aria-pressed="false" aria-controls="start-menu">
+    <button class="start-button" id="start-btn" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" aria-controls="start-menu">
       <img src="https://raw.githubusercontent.com/grassmunk/Chicago95/refs/heads/master/Theme/Chicago95/misc/windows.png" alt="" width="16" height="16">
       Start
     </button>
@@ -205,7 +205,8 @@
     <time class="taskbar-clock" id="clock">00:00</time>
   </footer>
 
-  <script src="script.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.4.15/dist/purify.min.js" integrity="sha384-uUMu9JDY09vBzRf9SPcK2VgUj+W/70J6Soc+Dded5P474ElQ63iv9j5N3DE7Kp3N" crossorigin="anonymous"></script>
+  <script defer src="script.js"></script>
 </body>
 
 </html>

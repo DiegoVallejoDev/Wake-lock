@@ -4,12 +4,21 @@
   const state = {
     wakeLock: null,
     wakeLockWanted: false,
+    wakeLockRequest: null,
     activeWindows: new Set(),
+    focusedWindow: null,
     zIndexCounter: 10,
     isDragging: false,
     currentWindow: null,
     dragOffset: { x: 0, y: 0 },
-    timer: { interval: null, remaining: 0, total: 0, wakeLock: null },
+    timer: {
+      interval: null,
+      remaining: 0,
+      total: 0,
+      deadline: 0,
+      wakeLock: null,
+      wakeLockRequest: null,
+    },
     calculator: { display: '' },
     tictactoe: { board: Array(9).fill(''), current: 'X', winner: null },
     todos: [],
@@ -17,10 +26,10 @@
   };
 
   const windows = {
-    'wake-Lock': { name: 'Wake Lock', default: { top: 40, left: 40 } },
-    calculator: { name: 'Calculator', default: { top: 40, left: 360 } },
-    notepad: { name: 'Notepad', default: { top: 250, left: 40 } },
-    timer: { name: 'Timer', default: { top: 250, left: 360 } },
+    'wake-Lock': { name: 'Wake Lock', default: { top: 40, left: 128 } },
+    calculator: { name: 'Calculator', default: { top: 40, left: 464 } },
+    notepad: { name: 'Notepad', default: { top: 250, left: 128 } },
+    timer: { name: 'Timer', default: { top: 250, left: 464 } },
     'tic-tac-toe': { name: 'Tic-Tac-Toe', default: { top: 40, left: 680 } },
     todo: { name: 'Todo List', default: { top: 250, left: 680 } },
   };
@@ -47,7 +56,10 @@
 
   function updateWakeButton(active) {
     const btn = $('#wake-lock-btn');
-    if (btn) btn.textContent = active ? 'Release Wake Lock' : 'Enable Wake Lock';
+    if (!btn) return;
+    btn.textContent = active ? 'Release Wake Lock' : 'Enable Wake Lock';
+    btn.setAttribute('aria-pressed', String(active));
+    btn.setAttribute('aria-busy', String(!!state.wakeLockRequest));
   }
 
   async function requestWakeLock() {
@@ -55,36 +67,63 @@
       updateWakeStatus('Wake Lock API not supported');
       return;
     }
+    if (document.visibilityState !== 'visible' || state.wakeLockRequest) return;
     if (state.wakeLock && !state.wakeLock.released) return;
+    const request = {};
+    state.wakeLockRequest = request;
+    state.wakeLockWanted = true;
+    updateWakeStatus('Requesting Wake Lock...');
+    updateWakeButton(true);
     try {
-      state.wakeLock = await navigator.wakeLock.request('screen');
-      state.wakeLockWanted = true;
+      const lock = await navigator.wakeLock.request('screen');
+      if (state.wakeLockRequest !== request || !state.wakeLockWanted || document.visibilityState !== 'visible') {
+        await lock.release();
+        return;
+      }
+      state.wakeLock = lock;
+      state.wakeLockRequest = null;
       updateWakeStatus('Wake Lock is active');
       updateWakeIndicator(true);
       updateWakeButton(true);
 
-      state.wakeLock.addEventListener('release', () => {
+      lock.addEventListener('release', () => {
+        if (state.wakeLock !== lock) return;
+        state.wakeLock = null;
         updateWakeStatus('Wake Lock was released');
         updateWakeIndicator(false);
-        updateWakeButton(false);
+        updateWakeButton(state.wakeLockWanted);
       });
     } catch (err) {
-      updateWakeStatus(`Error - ${err.message}`);
+      if (state.wakeLockRequest === request) {
+        state.wakeLockWanted = false;
+        updateWakeStatus(`Error - ${err.message}`);
+        updateWakeIndicator(false);
+      }
+    } finally {
+      if (state.wakeLockRequest === request) {
+        state.wakeLockRequest = null;
+        updateWakeButton(state.wakeLockWanted);
+      }
     }
   }
 
-  function releaseWakeLock() {
-    if (state.wakeLock && !state.wakeLock.released) {
-      state.wakeLock.release();
-    }
+  async function releaseWakeLock(keepWanted = false) {
+    state.wakeLockRequest = null;
+    const lock = state.wakeLock;
     state.wakeLock = null;
-    state.wakeLockWanted = false;
+    if (!keepWanted) state.wakeLockWanted = false;
     updateWakeIndicator(false);
-    updateWakeButton(false);
+    updateWakeButton(state.wakeLockWanted);
+    updateWakeStatus(state.wakeLockWanted ? 'Wake Lock is suspended' : 'Wake Lock is not active');
+    try {
+      if (lock && !lock.released) await lock.release();
+    } catch (err) {
+      console.error('Wake lock release failed:', err);
+    }
   }
 
   function toggleWakeLock() {
-    if (state.wakeLock && !state.wakeLock.released) {
+    if (state.wakeLockWanted) {
       releaseWakeLock();
     } else {
       requestWakeLock();
@@ -93,15 +132,94 @@
 
   // --- Window Management ---
 
+  function selectDesktopIcon(selected) {
+    $$('.desktop-icon').forEach((icon, index) => {
+      const active = icon === selected;
+      icon.classList.toggle('selected', active);
+      icon.setAttribute('aria-pressed', String(active));
+      icon.tabIndex = active || (!selected && index === 0) ? 0 : -1;
+    });
+  }
+
+  function moveDesktopSelection(icon, key) {
+    const icons = Array.from($$('.desktop-icon'));
+    if (key === 'Home' || key === 'End') {
+      (key === 'Home' ? icons[0] : icons[icons.length - 1]).focus();
+      return;
+    }
+
+    const horizontal = key === 'ArrowLeft' || key === 'ArrowRight';
+    const direction = key === 'ArrowRight' || key === 'ArrowDown' ? 1 : -1;
+    const axis = horizontal ? 'left' : 'top';
+    const crossAxis = horizontal ? 'top' : 'left';
+    const origin = icon.getBoundingClientRect();
+    let nearest = icon;
+    let distance = Infinity;
+    icons.forEach((candidate) => {
+      const bounds = candidate.getBoundingClientRect();
+      const delta = (bounds[axis] - origin[axis]) * direction;
+      if (delta > 0 && delta < distance && Math.abs(bounds[crossAxis] - origin[crossAxis]) < 1) {
+        nearest = candidate;
+        distance = delta;
+      }
+    });
+    nearest.focus();
+  }
+
+  function createAppIcon(id, size = 16) {
+    const source = $(`.desktop-icon[data-window="${id}"] img`);
+    if (!source) return null;
+    const icon = source.cloneNode();
+    icon.className = 'app-icon';
+    icon.width = size;
+    icon.height = size;
+    icon.draggable = false;
+    return icon;
+  }
+
+  function positionWindow(win, left, top) {
+    const maxLeft = Math.max(0, window.innerWidth - win.offsetWidth);
+    const maxTop = Math.max(0, $('.taskbar').getBoundingClientRect().top - win.offsetHeight);
+    win.style.left = `${Math.min(Math.max(0, left), maxLeft)}px`;
+    win.style.top = `${Math.min(Math.max(0, top), maxTop)}px`;
+  }
+
+  function constrainWindow(win) {
+    if (window.matchMedia('(max-width: 600px)').matches || win.classList.contains('maximized')) return;
+    const rect = win.getBoundingClientRect();
+    positionWindow(win, rect.left, rect.top);
+  }
+
   function focusWindow(id) {
-    state.zIndexCounter++;
-    const win = $(`#${id}`);
-    if (win) win.style.zIndex = state.zIndexCounter;
+    const win = id ? $(`#${id}`) : null;
+    if (win && state.focusedWindow !== id) {
+      state.zIndexCounter++;
+      win.style.zIndex = state.zIndexCounter;
+    }
+    state.focusedWindow = id;
 
     $$('.window').forEach((w) => {
       const tb = w.querySelector('.title-bar');
       if (tb) tb.classList.toggle('inactive', w.id !== id);
     });
+    $$('#active-windows button').forEach((button) => {
+      const active = button.dataset.window === id;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  function restoreWindowFocus(id) {
+    if (state.focusedWindow !== id) return;
+    const visible = Array.from($$('.window:not(.hidden)'));
+    visible.sort((left, right) => Number(right.style.zIndex) - Number(left.style.zIndex));
+    if (visible.length) {
+      focusWindow(visible[0].id);
+      visible[0].focus({ preventScroll: true });
+    } else {
+      focusWindow(null);
+      $(`.desktop-icon[data-window="${id}"]`).focus();
+    }
   }
 
   function showWindow(id) {
@@ -119,8 +237,10 @@
       win.dataset.positioned = 'true';
     }
 
+    constrainWindow(win);
     focusWindow(id);
     updateTaskbar();
+    win.focus({ preventScroll: true });
   }
 
   function closeWindow(id) {
@@ -130,12 +250,14 @@
     win.classList.add('hidden');
     state.activeWindows.delete(id);
     if (id === 'timer') pauseTimer();
+    restoreWindowFocus(id);
     updateTaskbar();
   }
 
   function minimizeWindow(id) {
     const win = $(`#${id}`);
     if (win) win.classList.add('hidden');
+    restoreWindowFocus(id);
     updateTaskbar();
   }
 
@@ -169,6 +291,7 @@
       if (maxBtn) maxBtn.setAttribute('aria-label', 'Restore');
     }
 
+    constrainWindow(win);
     focusWindow(id);
   }
 
@@ -178,13 +301,19 @@
 
     state.activeWindows.forEach((id) => {
       const win = $(`#${id}`);
-      const isVisible = win && !win.classList.contains('hidden');
+      const isActive = state.focusedWindow === id;
       const btn = document.createElement('button');
-      btn.textContent = windows[id].name;
-      btn.className = isVisible ? 'active' : '';
-      btn.setAttribute('aria-pressed', isVisible ? 'true' : 'false');
+      const label = document.createElement('span');
+      label.textContent = windows[id].name;
+      const icon = createAppIcon(id);
+      if (icon) btn.appendChild(icon);
+      btn.appendChild(label);
+      btn.title = windows[id].name;
+      btn.dataset.window = id;
+      btn.className = isActive ? 'active' : '';
+      btn.setAttribute('aria-pressed', String(isActive));
       btn.addEventListener('click', () => {
-        if (isVisible) minimizeWindow(id);
+        if (win && !win.classList.contains('hidden') && state.focusedWindow === id) minimizeWindow(id);
         else showWindow(id);
       });
       container.appendChild(btn);
@@ -213,16 +342,7 @@
     e.preventDefault();
 
     const win = state.currentWindow;
-    const maxX = window.innerWidth - win.offsetWidth;
-    const maxY = window.innerHeight - win.offsetHeight - 28;
-
-    let x = e.clientX - state.dragOffset.x;
-    let y = e.clientY - state.dragOffset.y;
-    x = Math.min(Math.max(0, x), maxX);
-    y = Math.min(Math.max(0, y), maxY);
-
-    win.style.left = `${x}px`;
-    win.style.top = `${y}px`;
+    positionWindow(win, e.clientX - state.dragOffset.x, e.clientY - state.dragOffset.y);
     win.style.margin = '0';
   }
 
@@ -236,17 +356,23 @@
   function toggleStartMenu() {
     const menu = $('#start-menu');
     const btn = $('#start-btn');
-    const visible = menu.classList.toggle('visible');
-    btn.setAttribute('aria-expanded', visible);
-    btn.setAttribute('aria-pressed', visible);
+    if (menu.classList.contains('visible')) {
+      closeStartMenu(true);
+      return;
+    }
+    menu.classList.add('visible');
+    btn.setAttribute('aria-expanded', 'true');
+    btn.setAttribute('aria-pressed', 'true');
+    $('#start-menu li').focus();
   }
 
-  function closeStartMenu() {
+  function closeStartMenu(restoreFocus = false) {
     const menu = $('#start-menu');
     const btn = $('#start-btn');
     menu.classList.remove('visible');
     btn.setAttribute('aria-expanded', 'false');
     btn.setAttribute('aria-pressed', 'false');
+    if (restoreFocus) btn.focus();
   }
 
   // --- Calculator ---
@@ -481,8 +607,18 @@
     const btn = $('#preview-toggle');
     if (!textarea || !preview || !btn) return;
 
+    btn.setAttribute('aria-pressed', String(state.notepadPreview));
     if (state.notepadPreview) {
-      preview.innerHTML = parseMarkdown(textarea.value);
+      if (window.DOMPurify && window.DOMPurify.isSupported) {
+        preview.innerHTML = window.DOMPurify.sanitize(parseMarkdown(textarea.value), {
+          USE_PROFILES: { html: true },
+          ADD_ATTR: ['target'],
+        });
+      } else {
+        const plainText = document.createElement('pre');
+        plainText.textContent = textarea.value;
+        preview.replaceChildren(plainText);
+      }
       preview.hidden = false;
       textarea.hidden = true;
       btn.textContent = 'Edit';
@@ -645,9 +781,10 @@
   // --- Timer ---
 
   function formatTimerTime(seconds) {
-    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const s = (seconds % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
+    const rounded = Math.ceil(seconds);
+    const minutes = Math.floor(rounded / 60).toString().padStart(2, '0');
+    const remainder = (rounded % 60).toString().padStart(2, '0');
+    return `${minutes}:${remainder}`;
   }
 
   function updateTimerDisplay() {
@@ -669,29 +806,51 @@
   }
 
   function readTimerInput() {
-    const min = parseInt($('#timer-min').value || '0', 10) || 0;
-    const sec = parseInt($('#timer-sec').value || '0', 10) || 0;
-    return min * 60 + Math.min(59, Math.max(0, sec));
+    const minutes = parseInt($('#timer-min').value, 10) || 0;
+    const seconds = parseInt($('#timer-sec').value, 10) || 0;
+    return Math.min(999, Math.max(0, minutes)) * 60 + Math.min(59, Math.max(0, seconds));
   }
 
   async function requestTimerWakeLock() {
-    if (!('wakeLock' in navigator)) return;
+    if (!state.timer.interval || document.visibilityState !== 'visible') return;
+    if (!('wakeLock' in navigator)) {
+      updateTimerStatus('Running... Screen wake lock is unavailable.');
+      return;
+    }
+    if (state.timer.wakeLockRequest) return;
     if (state.timer.wakeLock && !state.timer.wakeLock.released) return;
+    const request = {};
+    state.timer.wakeLockRequest = request;
     try {
-      state.timer.wakeLock = await navigator.wakeLock.request('screen');
+      const lock = await navigator.wakeLock.request('screen');
+      if (state.timer.wakeLockRequest !== request || !state.timer.interval || document.visibilityState !== 'visible') {
+        await lock.release();
+        return;
+      }
+      state.timer.wakeLock = lock;
+      updateTimerStatus('Running...');
+      lock.addEventListener('release', () => {
+        if (state.timer.wakeLock !== lock) return;
+        state.timer.wakeLock = null;
+        if (state.timer.interval) updateTimerStatus('Running... Screen wake lock was released.');
+      });
     } catch (err) {
-      console.error('Timer wake lock request failed:', err);
+      if (state.timer.wakeLockRequest === request) {
+        updateTimerStatus('Running... Screen wake lock is unavailable.');
+      }
+    } finally {
+      if (state.timer.wakeLockRequest === request) state.timer.wakeLockRequest = null;
     }
   }
 
-  function releaseTimerWakeLock() {
-    if (state.timer.wakeLock) {
-      try {
-        if (!state.timer.wakeLock.released) state.timer.wakeLock.release();
-      } catch (err) {
-        console.error('Timer wake lock release failed:', err);
-      }
-      state.timer.wakeLock = null;
+  async function releaseTimerWakeLock() {
+    state.timer.wakeLockRequest = null;
+    const lock = state.timer.wakeLock;
+    state.timer.wakeLock = null;
+    try {
+      if (lock && !lock.released) await lock.release();
+    } catch (err) {
+      console.error('Timer wake lock release failed:', err);
     }
   }
 
@@ -717,32 +876,42 @@
   }
 
   function startTimer() {
+    if (state.timer.interval) return;
     if (state.timer.remaining <= 0) {
       const custom = readTimerInput();
       if (custom > 0) setTimer(custom);
       else return;
     }
 
-    if (state.timer.interval) clearInterval(state.timer.interval);
+    state.timer.deadline = Date.now() + state.timer.remaining * 1000;
+    state.timer.interval = setInterval(tickTimer, 1000);
     updateTimerStatus('Running...');
     requestTimerWakeLock();
+  }
 
-    state.timer.interval = setInterval(() => {
-      state.timer.remaining--;
-      updateTimerDisplay();
-      if (state.timer.remaining <= 0) {
-        pauseTimer();
-        updateTimerStatus("Time's up!");
-        playAlarm();
-      }
-    }, 1000);
+  function updateTimerRemaining() {
+    if (!state.timer.interval) return;
+    state.timer.remaining = Math.max(0, (state.timer.deadline - Date.now()) / 1000);
+    updateTimerDisplay();
+  }
+
+  function tickTimer() {
+    if (!state.timer.interval) return;
+    updateTimerRemaining();
+    if (state.timer.remaining <= 0) {
+      pauseTimer();
+      updateTimerStatus("Time's up!");
+      playAlarm();
+    }
   }
 
   function pauseTimer() {
     if (state.timer.interval) {
+      updateTimerRemaining();
       clearInterval(state.timer.interval);
       state.timer.interval = null;
     }
+    state.timer.deadline = 0;
     releaseTimerWakeLock();
     updateTimerStatus(state.timer.remaining > 0 ? 'Paused' : 'Finished');
   }
@@ -761,7 +930,13 @@
     const h = now.getHours().toString().padStart(2, '0');
     const m = now.getMinutes().toString().padStart(2, '0');
     const el = $('#clock');
-    if (el) el.textContent = `${h}:${m}`;
+    if (el) {
+      el.textContent = `${h}:${m}`;
+      el.dateTime = now.toISOString();
+      el.title = now.toLocaleDateString(undefined, {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      });
+    }
   }
 
   // --- Event Handlers ---
@@ -781,25 +956,70 @@
       const menu = $('#start-menu');
       if (menu.classList.contains('visible')) {
         e.preventDefault();
-        closeStartMenu();
+        closeStartMenu(true);
+        return;
       }
     }
 
-    if (e.key === 'Enter' || e.key === ' ') {
-      const icon = document.activeElement.closest('.desktop-icon');
-      if (icon) {
+    const icon = document.activeElement.closest('.desktop-icon');
+    if (icon) {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
         e.preventDefault();
-        const id = icon.dataset.window;
-        if (id) showWindow(id);
+        moveDesktopSelection(icon, e.key);
+        return;
       }
+      if (e.key === ' ') {
+        e.preventDefault();
+        selectDesktopIcon(icon);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        showWindow(icon.dataset.window);
+        return;
+      }
+      if (e.key === 'Escape') {
+        selectDesktopIcon(null);
+        $('#desktop').focus();
+      }
+    }
 
-      const item = document.activeElement.closest('#start-menu li');
-      if (item) {
+    if (document.activeElement === $('#start-btn') && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      if (!$('#start-menu').classList.contains('visible')) toggleStartMenu();
+      const items = $$('#start-menu li');
+      (e.key === 'ArrowUp' ? items[items.length - 1] : items[0]).focus();
+      return;
+    }
+
+    const item = document.activeElement.closest('#start-menu li');
+    if (item) {
+      const items = Array.from($$('#start-menu li'));
+      const index = items.indexOf(item);
+      if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+        e.preventDefault();
+        const next = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1
+          : (index + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+        items[next].focus();
+        return;
+      }
+      if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         const id = item.dataset.window;
         if (id) {
           showWindow(id);
           closeStartMenu();
+        }
+        return;
+      }
+      if (e.key === 'Tab') {
+        closeStartMenu(true);
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        const ordered = items.slice(index + 1).concat(items.slice(0, index + 1));
+        const match = ordered.find((entry) => entry.textContent.trim().toLowerCase().startsWith(e.key.toLowerCase()));
+        if (match) {
+          e.preventDefault();
+          match.focus();
         }
       }
     }
@@ -807,11 +1027,33 @@
 
   function init() {
     // Desktop icons
+    $('#desktop').tabIndex = -1;
+    selectDesktopIcon(null);
+    $$('.desktop-icon').forEach((icon) => {
+      icon.title = windows[icon.dataset.window].name;
+      icon.querySelector('img').draggable = false;
+      const item = $(`#start-menu [data-window="${icon.dataset.window}"]`);
+      if (item) item.prepend(createAppIcon(icon.dataset.window, 32));
+    });
+    $('#desktop').addEventListener('focusin', (e) => {
+      focusWindow(null);
+      const icon = e.target.closest('.desktop-icon');
+      if (icon) selectDesktopIcon(icon);
+    });
     $('#desktop').addEventListener('click', (e) => {
       const icon = e.target.closest('.desktop-icon');
-      if (!icon) return;
-      const id = icon.dataset.window;
-      if (id) showWindow(id);
+      selectDesktopIcon(icon);
+      if (!icon) {
+        $('#desktop').focus();
+        return;
+      }
+      if (e.detail === 0 || e.pointerType === 'touch' || e.pointerType === 'pen' || window.matchMedia('(hover: none)').matches) {
+        showWindow(icon.dataset.window);
+      }
+    });
+    $('#desktop').addEventListener('dblclick', (e) => {
+      const icon = e.target.closest('.desktop-icon');
+      if (icon) showWindow(icon.dataset.window);
     });
 
     // Window controls
@@ -821,12 +1063,24 @@
 
     // Bring to front / dragging
     $$('.window').forEach((win) => {
+      win.tabIndex = -1;
       const titleBar = win.querySelector('.title-bar');
+      const title = win.querySelector('.title-bar-text');
+      const label = document.createElement('span');
+      label.textContent = title.textContent;
+      title.replaceChildren(createAppIcon(win.id), label);
       titleBar.addEventListener('mousedown', startDrag);
+      titleBar.addEventListener('dblclick', (e) => {
+        if (!e.target.closest('.title-bar-controls')) maximizeWindow(win.id);
+      });
       win.addEventListener('mousedown', () => focusWindow(win.id));
+      win.addEventListener('focusin', () => focusWindow(win.id));
     });
     document.addEventListener('mousemove', drag);
     document.addEventListener('mouseup', stopDrag);
+    window.addEventListener('resize', () => {
+      $$('.window:not(.hidden)').forEach(constrainWindow);
+    });
 
     // Start menu
     $('#start-btn').addEventListener('click', (e) => {
@@ -835,6 +1089,7 @@
     });
 
     $$('#start-menu li').forEach((item) => {
+      item.addEventListener('mouseenter', () => item.focus({ preventScroll: true }));
       item.addEventListener('click', () => {
         const id = item.dataset.window;
         if (id) showWindow(id);
@@ -852,6 +1107,11 @@
 
     // Wake lock
     $('#wake-lock-btn').addEventListener('click', toggleWakeLock);
+    updateWakeButton(false);
+    if (!('wakeLock' in navigator)) {
+      $('#wake-lock-btn').disabled = true;
+      updateWakeStatus('Wake Lock API not supported in this browser or context');
+    }
 
     // Calculator
     $$('#calculator .calc-btn').forEach((btn) => {
@@ -916,7 +1176,11 @@
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         if (state.wakeLockWanted) requestWakeLock();
+        tickTimer();
         if (state.timer.interval) requestTimerWakeLock();
+      } else {
+        if (state.wakeLockWanted) releaseWakeLock(true);
+        releaseTimerWakeLock();
       }
     });
 

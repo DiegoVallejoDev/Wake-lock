@@ -9,6 +9,7 @@ import { minesweeper } from "./minesweeper";
 import { paint } from "./paint";
 import { msDos } from "./ms-dos";
 import { calendar } from "./calendar";
+import { doom } from "./doom";
 
 /**
  * The program registry: the shell builds desktop icons, the Start menu, and
@@ -26,6 +27,7 @@ export const programs: ProgramDefinition[] = [
   paint,
   msDos,
   calendar,
+  doom,
 ];
 
 export function defaultPosition(program: ProgramDefinition) {

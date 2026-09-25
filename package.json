@@ -1,0 +1,32 @@
+{
+  "name": "wake-lock",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Retro Web Inc - a Windows 98-style desktop with small browser utilities",
+  "packageManager": "pnpm@9.15.5",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "serve": "npx serve@latest out",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "98.css": "^0.1.21",
+    "dompurify": "^3.4.16",
+    "next": "^16.3.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7",
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.6",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
+  }
+}

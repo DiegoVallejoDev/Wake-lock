@@ -1,0 +1,135 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.content {
+  width: 100%;
+  min-height: 200px;
+  resize: vertical;
+  flex: 1;
+  margin-bottom: 8px;
+  overflow: auto;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.actions button {
+  min-width: 0;
+  margin-left: 0;
+}
+
+.preview {
+  width: 100%;
+  min-height: 200px;
+  overflow: auto;
+  background: #fff;
+  border: inset 2px;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  flex: 1;
+}
+
+.preview h1,
+.preview h2,
+.preview h3,
+.preview h4,
+.preview h5,
+.preview h6 {
+  margin: 0.5em 0;
+}
+
+.preview h1 {
+  font-size: 24px;
+}
+
+.preview h2 {
+  font-size: 20px;
+}
+
+.preview h3 {
+  font-size: 18px;
+}
+
+.preview h4 {
+  font-size: 16px;
+}
+
+.preview h5,
+.preview h6 {
+  font-size: 14px;
+}
+
+.preview p {
+  margin: 0 0 0.5em;
+}
+
+.preview ul,
+.preview ol {
+  padding-left: 20px;
+  margin: 0 0 0.5em;
+}
+
+.preview code {
+  background: #eee;
+  padding: 1px 2px;
+}
+
+.preview pre {
+  background: #eee;
+  padding: 8px;
+  overflow: auto;
+  margin: 0 0 0.5em;
+  white-space: pre;
+}
+
+.preview pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.5em;
+}
+
+.preview th,
+.preview td {
+  border: 1px solid #808080;
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.preview th {
+  background: #eee;
+  font-weight: bold;
+}
+
+.preview blockquote {
+  border-left: 3px solid #808080;
+  margin: 0 0 0.5em;
+  padding-left: 12px;
+  color: #555;
+}
+
+.preview hr {
+  border: none;
+  border-top: 1px solid #808080;
+  margin: 0.5em 0;
+}
+
+.preview img {
+  max-width: 100%;
+}

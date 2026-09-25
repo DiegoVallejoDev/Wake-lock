@@ -1,0 +1,25 @@
+.display {
+  font-family: "Pixelated MS Sans Serif", monospace;
+  font-size: 2.4em;
+  text-align: center;
+  margin: 10px 0;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin: 8px 0;
+}
+
+.controls button {
+  min-width: 0;
+}
+
+.custom {
+  justify-content: center;
+}
+
+.status {
+  text-align: left;
+}

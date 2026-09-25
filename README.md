@@ -1,6 +1,6 @@
 # Wake Lock - Retro Web Inc
 
-A Windows 98-style desktop with small browser utilities, built with HTML, CSS, and vanilla JavaScript. No build step is required.
+A Windows 98-style desktop with small browser utilities, built with Next.js, React, and TypeScript. It builds to a static site with no server component.
 
 ## Features
 
@@ -13,15 +13,33 @@ A Windows 98-style desktop with small browser utilities, built with HTML, CSS, a
 - **Desktop controls**: Drag, minimize, maximize, and restore windows. Windows stay within the available screen area and use a full-window layout on phones.
 - **Classic shell**: Matching Chicago95 bitmap icons, label-only desktop selection, beveled windows, an icon-based Start menu, and taskbar buttons that track the active window.
 
+## Architecture
+
+The desktop is a shell plus a program registry. The shell (`src/shell/`) owns the window manager, window chrome, desktop icons, Start menu, and taskbar. Each program is a folder under `src/programs/` that declares its own manifest:
+
+```
+src/programs/<name>/
+  index.ts            manifest: id, title, icon, default size/position, surfaces
+  <Name>App.tsx       React component rendered inside the window
+  *.ts / *.module.css program logic and scoped styles
+```
+
+The manifest is a `ProgramDefinition` (`src/shell/types.ts`): icon path, default window size and position, `desktop`/`startMenu` flags, `maximizable`, and the component. The shell reads only manifests, so adding a program means creating its folder and adding one line to the registry in `src/programs/index.ts`. Program components keep running while their windows are closed or minimized, which preserves their state like the original implementation.
+
+98.css, DOMPurify, and the Chicago95 icons are vendored (`public/icons/`), so the site works fully offline.
+
 ## Run Locally
 
-1. Clone or download this repository.
-2. Open [index.html](index.html) in a modern browser.
-3. Double-click a desktop icon, or choose a utility from the Start menu. On a touchscreen, tap an icon once.
+Requires Node.js 22 or later and pnpm.
 
-The interface works as a static file. For deployment, use an HTTPS static host. The Screen Wake Lock API requires a secure context and browser support; localhost is also suitable for development. Local-file wake lock support may vary by browser.
+```sh
+pnpm install
+pnpm dev
+```
 
-Internet access is needed for the external [98.css](https://jdan.github.io/98.css/) stylesheet and fonts, [Chicago95](https://github.com/grassmunk/Chicago95) icons, and [DOMPurify](https://github.com/cure53/DOMPurify). DOMPurify is version-pinned and verified with Subresource Integrity.
+Then open http://localhost:3000. Double-click a desktop icon, or choose a utility from the Start menu. On a touchscreen, tap an icon once.
+
+For production, `pnpm build` emits a static site to `out/` that any HTTPS static host can serve (`pnpm serve` previews it). The Screen Wake Lock API requires a secure context and browser support; localhost is suitable for development.
 
 ## Desktop Interaction
 
@@ -48,13 +66,13 @@ Notes are saved with the Save button. Task changes are saved automatically. Both
 
 ## Tests
 
-With Node.js 22 or later, run:
-
 ```sh
-node --test tests/script.test.cjs
+pnpm test
+pnpm lint
+pnpm typecheck
 ```
 
-The dependency-free tests exercise the application event handlers with controlled browser objects and clocks. They cover wake lock races, cancellation, visibility changes, timer drift, pause/resume, input bounds, safe preview fallback, desktop selection, mouse/touch/keyboard activation, taskbar focus, and Start menu navigation. Real DOM sanitization, icon loading, hover/focus styling, and responsive layout should also be checked in a browser.
+Vitest covers the window manager reducer (open/close/minimize/focus ordering, cascade offsets, maximize restore geometry) and the extracted program logic: calculator expression evaluation, tic-tac-toe win detection, the timer's mm:ss formatting, and the Markdown renderer's output and HTML escaping. ESLint runs `eslint-config-next` (core-web-vitals plus TypeScript). Interactive behavior like wake lock races, timer drift, sanitization, keyboard navigation, and the responsive layout should also be checked in a browser.
 
 ## License
 

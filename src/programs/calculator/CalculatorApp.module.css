@@ -1,0 +1,18 @@
+.display {
+  width: 100%;
+  text-align: right;
+  padding: 5px;
+  font-family: "Pixelated MS Sans Serif", monospace;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  padding: 10px 0;
+}
+
+.key {
+  min-width: auto;
+  padding: 0;
+}

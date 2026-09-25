@@ -3,6 +3,8 @@ import { safeEvaluate } from "../src/programs/calculator/safeEvaluate";
 import { checkWinner, type Board } from "../src/programs/tic-tac-toe/game";
 import { formatTimerTime } from "../src/programs/timer/useTimer";
 import { parseMarkdown } from "../src/programs/notepad/markdown";
+import { createBoard, isWin, reveal, toggleFlag } from "../src/programs/minesweeper/game";
+import { monthGrid } from "../src/programs/calendar/calendar";
 
 describe("safeEvaluate", () => {
   it("evaluates arithmetic with the four operators and parentheses", () => {
@@ -83,5 +85,75 @@ describe("parseMarkdown", () => {
     expect(html).toContain("<table>");
     expect(html).toContain('<th style="text-align:left">L</th>');
     expect(html).toContain('<td style="text-align:right">b</td>');
+  });
+});
+
+describe("minesweeper", () => {
+  const rand = () => 0.5; // deterministic shuffle
+
+  it("places the requested number of mines and protects the first click", () => {
+    const board = createBoard(9, 9, 10, 40, rand);
+    expect(board.filter((c) => c.mine)).toHaveLength(10);
+    // The safe cell and all 8 neighbors are mine-free.
+    const safeZone = [30, 31, 32, 39, 40, 41, 48, 49, 50];
+    for (const i of safeZone) expect(board[i].mine).toBe(false);
+    expect(board).toHaveLength(81);
+  });
+
+  it("computes adjacency counts next to mines", () => {
+    // 1x3 board with a safe corner: the mine can only sit at index 2.
+    const board = createBoard(1, 3, 1, 0, rand);
+    expect(board[2].mine).toBe(true);
+    expect(board[0].adjacent).toBe(0);
+    expect(board[1].adjacent).toBe(1);
+  });
+
+  it("reveals a zero-adjacent region by flood fill", () => {
+    const board = createBoard(9, 9, 10, 40, rand);
+    const next = reveal(board, 9, 40);
+    const revealed = next.filter((c) => c.revealed);
+    expect(revealed.length).toBeGreaterThan(8);
+    // No revealed cell shows a mine (first click is protected and fill stops at numbers).
+    expect(revealed.every((c) => !c.mine)).toBe(true);
+  });
+
+  it("flags unrevealed cells and ignores revealed ones", () => {
+    let board = createBoard(9, 9, 10, 40, rand);
+    board = toggleFlag(board, 0);
+    expect(board[0].flagged).toBe(true);
+    board[0].revealed = true;
+    const next = toggleFlag(board, 0);
+    expect(next[0].flagged).toBe(true); // revealed cells can't toggle
+  });
+
+  it("detects a win when every non-mine cell is revealed", () => {
+    const board = createBoard(3, 3, 1, 4, rand).map((c) => ({
+      ...c,
+      revealed: !c.mine,
+    }));
+    expect(isWin(board)).toBe(true);
+    board[0].revealed = false;
+    // Cell 0 may be a mine — force a real non-mine cell hidden for a false result.
+    const nonMine = board.findIndex((c) => !c.mine);
+    board[nonMine].revealed = false;
+    expect(isWin(board)).toBe(false);
+  });
+});
+
+describe("monthGrid", () => {
+  it("produces full 7-day weeks padded with zeros", () => {
+    const weeks = monthGrid(2026, 8); // September 2026 starts on Tuesday
+    for (const w of weeks) expect(w).toHaveLength(7);
+    expect(weeks[0].slice(0, 2)).toEqual([0, 0]);
+    expect(weeks[0][2]).toBe(1);
+    expect(weeks.flat().filter((d) => d > 0)).toHaveLength(30);
+  });
+
+  it("handles month lengths and leap years", () => {
+    expect(monthGrid(2024, 1).flat().filter(Boolean)).toHaveLength(29); // Feb 2024 leap
+    expect(monthGrid(2026, 1).flat().filter(Boolean)).toHaveLength(28); // Feb 2026
+    expect(monthGrid(2026, 0).flat().filter(Boolean)).toHaveLength(31); // Jan 2026
+    // A month starting on Sunday has no leading padding.
+    expect(monthGrid(2026, 2)[0][0]).toBe(1); // March 2026 starts Sunday
   });
 });

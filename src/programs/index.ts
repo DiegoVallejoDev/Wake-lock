@@ -5,6 +5,10 @@ import { notepad } from "./notepad";
 import { timer } from "./timer";
 import { ticTacToe } from "./tic-tac-toe";
 import { todo } from "./todo";
+import { minesweeper } from "./minesweeper";
+import { paint } from "./paint";
+import { msDos } from "./ms-dos";
+import { calendar } from "./calendar";
 
 /**
  * The program registry: the shell builds desktop icons, the Start menu, and
@@ -18,6 +22,10 @@ export const programs: ProgramDefinition[] = [
   timer,
   ticTacToe,
   todo,
+  minesweeper,
+  paint,
+  msDos,
+  calendar,
 ];
 
 export function defaultPosition(program: ProgramDefinition) {

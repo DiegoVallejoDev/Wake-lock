@@ -1,0 +1,40 @@
+.body {
+  text-align: center;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.title {
+  font-weight: bold;
+  flex: 1;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.day {
+  padding: 3px 0;
+  text-align: center;
+  border: 1px solid transparent;
+  font-size: 12px;
+}
+
+.weekday {
+  font-weight: bold;
+  border-bottom: 1px solid #808080;
+}
+
+.today {
+  border: 1px dotted black;
+  background: #000080;
+  color: white;
+  font-weight: bold;
+}

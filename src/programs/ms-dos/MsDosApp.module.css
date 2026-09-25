@@ -1,0 +1,40 @@
+.screen {
+  background: #000;
+  color: #c0c0c0;
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  min-height: 180px;
+  max-height: 300px;
+  padding: 4px 6px;
+  border: 1px inset;
+  cursor: text;
+  display: flex;
+  flex-direction: column;
+}
+
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.line {
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+
+.prompt {
+  display: flex;
+  gap: 0;
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+}

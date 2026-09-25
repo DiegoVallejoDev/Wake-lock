@@ -10,6 +10,10 @@ A Windows 98-style desktop with small browser utilities, built with Next.js, Rea
 - **Calculator**: Basic arithmetic with operator precedence.
 - **Tic-Tac-Toe**: A local two-player game.
 - **Todo List**: Add, complete, and delete tasks stored in the current browser.
+- **Minesweeper**: Classic 9x9 grid with first-click safety, flood-fill reveals, right-click flags, a mine counter, and an elapsed-time display.
+- **Paint**: A drawing canvas with a color palette, eraser, adjustable brush size, clear, and PNG download.
+- **MS-DOS Prompt**: A command interpreter with help, dir, ver, echo, cls, and a `start` command that launches any installed program by name.
+- **Calendar**: A month view with today highlighted and previous/next month navigation.
 - **Desktop controls**: Drag, minimize, maximize, and restore windows. Windows stay within the available screen area and use a full-window layout on phones.
 - **Classic shell**: Matching Chicago95 bitmap icons, label-only desktop selection, beveled windows, an icon-based Start menu, and taskbar buttons that track the active window.
 

@@ -23,6 +23,23 @@ export function useWakeLock() {
   const [pressed, setPressed] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  // A held sentinel disappeared (system release or our own release). While
+  // hidden the user's intent survives and re-acquires on return; while visible
+  // the loss is reported and the intent is cleared so the UI stays honest.
+  const handleLost = useCallback((lock: WakeLockSentinel) => {
+    if (m.current.lock !== lock) return;
+    m.current.lock = null;
+    setActive(false);
+    if (document.visibilityState !== "visible" && m.current.wanted) {
+      setStatus("Wake Lock is suspended");
+      setPressed(true);
+    } else {
+      m.current.wanted = false;
+      setStatus("Wake Lock was released");
+      setPressed(false);
+    }
+  }, []);
+
   const request = useCallback(async () => {
     if (!("wakeLock" in navigator)) {
       setStatus("Wake Lock API not supported");
@@ -54,13 +71,7 @@ export function useWakeLock() {
       setPressed(true);
       setBusy(false);
 
-      lock.addEventListener("release", () => {
-        if (m.current.lock !== lock) return;
-        m.current.lock = null;
-        setStatus("Wake Lock was released");
-        setActive(false);
-        setPressed(m.current.wanted);
-      });
+      lock.addEventListener("release", () => handleLost(lock));
     } catch (err) {
       if (m.current.request === req) {
         m.current.wanted = false;
@@ -74,7 +85,7 @@ export function useWakeLock() {
         setBusy(false);
       }
     }
-  }, []);
+  }, [handleLost]);
 
   const release = useCallback(async (keepWanted = false) => {
     m.current.request = null;
@@ -111,6 +122,16 @@ export function useWakeLock() {
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, [request, release]);
+
+  // Periodically reconcile the UI with the actual sentinel state so a release
+  // that happens without a matching event can never leave the UI stale.
+  useEffect(() => {
+    const id = setInterval(() => {
+      const lock = m.current.lock;
+      if (lock && lock.released) handleLost(lock);
+    }, 2000);
+    return () => clearInterval(id);
+  }, [handleLost]);
 
   return { supported, status, active, pressed, busy, toggle };
 }

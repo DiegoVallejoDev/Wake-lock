@@ -5,6 +5,7 @@ import { formatTimerTime } from "../src/programs/timer/useTimer";
 import { parseMarkdown } from "../src/programs/notepad/markdown";
 import { createBoard, isWin, reveal, toggleFlag } from "../src/programs/minesweeper/game";
 import { monthGrid } from "../src/programs/calendar/calendar";
+import { BARS, LOOP_STEPS, PATTERN, STEPS_PER_BAR, midiToFreq } from "../src/programs/doom/doomMusic";
 
 describe("safeEvaluate", () => {
   it("evaluates arithmetic with the four operators and parentheses", () => {
@@ -155,5 +156,31 @@ describe("monthGrid", () => {
     expect(monthGrid(2026, 0).flat().filter(Boolean)).toHaveLength(31); // Jan 2026
     // A month starting on Sunday has no leading padding.
     expect(monthGrid(2026, 2)[0][0]).toBe(1); // March 2026 starts Sunday
+  });
+});
+
+describe("doomMusic pattern", () => {
+  it("covers the whole loop with sorted, in-range steps", () => {
+    const steps = PATTERN.map((n) => n.step);
+    expect(Math.max(...steps)).toBeLessThan(LOOP_STEPS);
+    expect(Math.min(...steps)).toBeGreaterThanOrEqual(0);
+    expect(new Set(PATTERN.map((n) => n.instrument))).toEqual(
+      new Set(["bass", "stab", "hat"]),
+    );
+    // Every step has a hat tick and the loop is exactly BARS * STEPS_PER_BAR.
+    expect(PATTERN.filter((n) => n.instrument === "hat")).toHaveLength(
+      LOOP_STEPS,
+    );
+    expect(LOOP_STEPS).toBe(BARS * STEPS_PER_BAR);
+  });
+
+  it("keeps pitched notes in a playable range and maps MIDI to frequency", () => {
+    for (const n of PATTERN) {
+      if (n.instrument === "hat") continue;
+      expect(n.midi).toBeGreaterThanOrEqual(38);
+      expect(n.midi).toBeLessThanOrEqual(70);
+    }
+    expect(midiToFreq(69)).toBeCloseTo(440);
+    expect(midiToFreq(57)).toBeCloseTo(220);
   });
 });

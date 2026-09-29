@@ -6,6 +6,6 @@ export const ie: ProgramDefinition = {
   title: "Internet Explorer",
   icon: "/icons/ie.png",
   defaultPosition: { x: 240, y: 140 },
-  defaultSize: { width: 460 },
+  defaultSize: { width: 600, height: 440 },
   component: WebBrowserApp,
 };

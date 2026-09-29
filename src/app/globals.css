@@ -176,6 +176,7 @@ body {
 
 .window-body {
   padding: 12px;
+  flex-grow: 1;
   min-height: 0;
   overflow: auto;
 }

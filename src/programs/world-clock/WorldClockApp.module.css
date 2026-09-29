@@ -1,0 +1,53 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.local {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border: 1px inset #dfdfdf;
+  background: white;
+  padding: 6px 10px;
+}
+
+.localLabel {
+  font-size: 11px;
+  color: #404040;
+}
+
+.localTime {
+  font-family: "Pixelated MS Sans Serif", monospace;
+  font-size: 26px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #808080;
+  padding: 3px 8px;
+  text-align: left;
+  background: white;
+}
+
+.table th {
+  background: #c0c0c0;
+  font-weight: bold;
+}
+
+.time {
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+.zone {
+  color: #404040;
+  white-space: nowrap;
+}

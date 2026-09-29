@@ -14,6 +14,7 @@ import { hackerNews } from "./hacker-news";
 import { weather } from "./weather";
 import { charmap } from "./charmap";
 import { worldClock } from "./world-clock";
+import { ie } from "./web-browser";
 
 /**
  * The program registry: the shell builds desktop icons, the Start menu, and
@@ -36,6 +37,7 @@ export const programs: ProgramDefinition[] = [
   weather,
   charmap,
   worldClock,
+  ie,
 ];
 
 export function defaultPosition(program: ProgramDefinition) {

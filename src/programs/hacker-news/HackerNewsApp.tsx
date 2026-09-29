@@ -1,15 +1,29 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useWindowManager } from "@/shell/windowManager";
+import { defaultPosition } from "@/programs";
+import { browseTo } from "@/programs/web-browser/launch";
+import { ie } from "@/programs/web-browser";
 import type { Story } from "./hn";
 import { fetchTopStories } from "./hn";
 import styles from "./HackerNewsApp.module.css";
 
 /** Live Hacker News front page via the public Algolia mirror (CORS-open). */
 export default function HackerNewsApp() {
+  const wm = useWindowManager();
   const [stories, setStories] = useState<Story[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const abortRef = useRef<AbortController | null>(null);
+
+  // Open the story inside the in-desktop Internet Explorer window.
+  const openStory = useCallback(
+    (s: Story) => {
+      browseTo(s.url);
+      wm.open(ie.id, defaultPosition(ie));
+    },
+    [wm],
+  );
 
   const load = useCallback(async () => {
     abortRef.current?.abort();
@@ -25,8 +39,11 @@ export default function HackerNewsApp() {
   }, []);
 
   useEffect(() => {
-    void load();
-    return () => abortRef.current?.abort();
+    const t = window.setTimeout(() => void load(), 0);
+    return () => {
+      window.clearTimeout(t);
+      abortRef.current?.abort();
+    };
   }, [load]);
 
   return (
@@ -54,7 +71,7 @@ export default function HackerNewsApp() {
               className={styles.row}
               role="listitem"
               title={s.url}
-              onClick={() => window.open(s.url, "_blank", "noopener,noreferrer")}
+              onClick={() => openStory(s)}
             >
               <span className={styles.rank}>{i + 1}.</span>
               <span className={styles.main}>

@@ -34,11 +34,10 @@ export default function CharMapApp() {
           </select>
         </label>
       </div>
-      <div className={styles.grid} role="grid" aria-label={CHARMAP_GROUPS[group].name}>
+      <div className={styles.grid} aria-label={CHARMAP_GROUPS[group].name}>
         {CHARMAP_GROUPS[group].chars.map((c) => (
           <button
             key={c}
-            role="gridcell"
             className={`${styles.cell} ${c === picked ? styles.sel : ""}`}
             onClick={() => setPicked(c)}
             onDoubleClick={() => void copy(c)}

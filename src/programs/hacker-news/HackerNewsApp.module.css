@@ -1,0 +1,89 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  min-height: 280px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand {
+  font-weight: bold;
+  color: #ff6600;
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  background: white;
+  border: 1px inset #dfdfdf;
+  min-height: 0;
+}
+
+.notice {
+  padding: 12px;
+  font-size: 12px;
+}
+
+.retry {
+  min-width: 0;
+  min-height: 0;
+}
+
+.row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 6px;
+  text-align: left;
+  background: none;
+  border: none;
+  box-shadow: none;
+  min-width: 0;
+  min-height: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.row:hover {
+  background: #000080;
+  color: white;
+}
+
+.row:hover .meta {
+  color: #c0c0c0;
+}
+
+.rank {
+  width: 22px;
+  flex-shrink: 0;
+  color: #808080;
+  font-size: 11px;
+  padding-top: 1px;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.meta {
+  font-size: 10px;
+  color: #808080;
+}
+
+.status {
+  font-size: 11px;
+  min-height: 14px;
+}

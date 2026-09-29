@@ -10,6 +10,10 @@ import { paint } from "./paint";
 import { msDos } from "./ms-dos";
 import { calendar } from "./calendar";
 import { doom } from "./doom";
+import { hackerNews } from "./hacker-news";
+import { weather } from "./weather";
+import { charmap } from "./charmap";
+import { worldClock } from "./world-clock";
 
 /**
  * The program registry: the shell builds desktop icons, the Start menu, and
@@ -28,6 +32,10 @@ export const programs: ProgramDefinition[] = [
   msDos,
   calendar,
   doom,
+  hackerNews,
+  weather,
+  charmap,
+  worldClock,
 ];
 
 export function defaultPosition(program: ProgramDefinition) {

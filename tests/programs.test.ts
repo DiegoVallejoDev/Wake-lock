@@ -6,6 +6,10 @@ import { parseMarkdown } from "../src/programs/notepad/markdown";
 import { createBoard, isWin, reveal, toggleFlag } from "../src/programs/minesweeper/game";
 import { monthGrid } from "../src/programs/calendar/calendar";
 import { BARS, LOOP_STEPS, PATTERN, STEPS_PER_BAR, midiToFreq } from "../src/programs/doom/doomMusic";
+import { formatAge, mapStory } from "../src/programs/hacker-news/hn";
+import { cToF, weatherText, weekdayName } from "../src/programs/weather/weather";
+import { CHARMAP_GROUPS, codePointLabel } from "../src/programs/charmap/charmap";
+import { CITIES, timeInZone } from "../src/programs/world-clock/worldclock";
 
 describe("safeEvaluate", () => {
   it("evaluates arithmetic with the four operators and parentheses", () => {
@@ -182,5 +186,92 @@ describe("doomMusic pattern", () => {
     }
     expect(midiToFreq(69)).toBeCloseTo(440);
     expect(midiToFreq(57)).toBeCloseTo(220);
+  });
+});
+
+describe("hacker-news helpers", () => {
+  const NOW = Date.parse("2026-09-24T12:00:00Z");
+
+  it("formats story ages compactly and clamps future timestamps", () => {
+    expect(formatAge(NOW / 1000 - 30, NOW)).toBe("30s");
+    expect(formatAge(NOW / 1000 - 12 * 60, NOW)).toBe("12m");
+    expect(formatAge(NOW / 1000 - 3 * 3600, NOW)).toBe("3h");
+    expect(formatAge(NOW / 1000 - 5 * 86400, NOW)).toBe("5d");
+    expect(formatAge(NOW / 1000 + 90, NOW)).toBe("0s");
+  });
+
+  it("maps Algolia hits to stories, falling back to the item page", () => {
+    const story = mapStory(
+      {
+        objectID: "42",
+        title: "Ask HN: hello",
+        url: null,
+        points: 10,
+        author: "diego",
+        num_comments: 5,
+        created_at_i: NOW / 1000 - 60,
+      },
+      NOW,
+    );
+    expect(story?.url).toBe("https://news.ycombinator.com/item?id=42");
+    expect(story?.ageText).toBe("1m");
+    expect(story?.comments).toBe(5);
+    expect(mapStory({ title: "no id" }, NOW)).toBeNull();
+    expect(mapStory({ objectID: "7" }, NOW)).toBeNull();
+  });
+});
+
+describe("weather helpers", () => {
+  it("describes WMO codes across every family", () => {
+    expect(weatherText(0)).toBe("Clear");
+    expect(weatherText(3)).toBe("Overcast");
+    expect(weatherText(45)).toBe("Fog");
+    expect(weatherText(63)).toBe("Rain");
+    expect(weatherText(75)).toBe("Snow");
+    expect(weatherText(95)).toBe("Thunderstorm");
+    expect(weatherText(999)).toBe("Unknown");
+  });
+
+  it("converts and formats temperatures and weekday names", () => {
+    expect(cToF(0)).toBe(32);
+    expect(cToF(20)).toBe(68);
+    expect(cToF(-10)).toBe(14);
+    expect(weekdayName("2026-09-24")).toBe("Thu");
+    expect(weekdayName("2026-09-27")).toBe("Sun");
+  });
+});
+
+describe("charmap palette", () => {
+  it("has non-empty groups with no duplicate characters", () => {
+    expect(CHARMAP_GROUPS.length).toBeGreaterThanOrEqual(5);
+    for (const g of CHARMAP_GROUPS) {
+      expect(g.chars.length).toBeGreaterThan(0);
+      expect(new Set(g.chars).size).toBe(g.chars.length);
+    }
+  });
+
+  it("labels characters with their code point", () => {
+    expect(codePointLabel("A")).toBe("U+0041");
+    expect(codePointLabel("€")).toBe("U+20AC");
+    expect(codePointLabel("☺")).toBe("U+263A");
+  });
+});
+
+describe("world-clock helpers", () => {
+  const now = new Date("2026-09-24T12:00:00Z");
+
+  it("formats time, date and GMT offset per zone", () => {
+    const utc = timeInZone(now, "UTC");
+    expect(utc.time).toBe("12:00:00");
+    expect(utc.offset).toBe("GMT");
+    const tokyo = timeInZone(now, "Asia/Tokyo");
+    expect(tokyo.time).toBe("21:00:00");
+    expect(tokyo.offset).toBe("GMT+9");
+    expect(tokyo.date).toBe("Sep 24");
+  });
+
+  it("keeps real IANA zones in the city list", () => {
+    expect(CITIES.length).toBeGreaterThanOrEqual(6);
+    for (const c of CITIES) expect(c.tz).toMatch(/(\/|^UTC$)/);
   });
 });

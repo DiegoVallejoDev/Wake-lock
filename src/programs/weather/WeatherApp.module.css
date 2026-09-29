@@ -1,0 +1,84 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+}
+
+.search {
+  display: flex;
+  gap: 4px;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+}
+
+.notice {
+  padding: 10px;
+  font-size: 12px;
+  border: 1px dashed #808080;
+}
+
+.now {
+  border: 1px inset #dfdfdf;
+  background: white;
+  padding: 10px;
+  text-align: center;
+}
+
+.place {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.big {
+  font-family: "Pixelated MS Sans Serif", monospace;
+  font-size: 42px;
+  margin: 4px 0;
+}
+
+.desc {
+  font-size: 13px;
+}
+
+.details {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #404040;
+}
+
+.days {
+  display: flex;
+  gap: 4px;
+}
+
+.day {
+  flex: 1;
+  border: 1px inset #dfdfdf;
+  background: white;
+  padding: 6px 2px;
+  text-align: center;
+  font-size: 10px;
+}
+
+.dow {
+  font-weight: bold;
+}
+
+.dtext {
+  color: #404040;
+  margin: 3px 0;
+  min-height: 24px;
+}
+
+.min {
+  color: #808080;
+}
+
+.credit {
+  font-size: 10px;
+  color: #808080;
+  text-align: right;
+}

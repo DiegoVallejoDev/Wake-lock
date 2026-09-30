@@ -7,5 +7,6 @@ export const paint: ProgramDefinition = {
   icon: "/icons/paint.png",
   defaultPosition: { x: 800, y: 250 },
   defaultSize: { width: 420 },
+  resizable: false,
   component: PaintApp,
 };

@@ -7,5 +7,6 @@ export const wakeLock: ProgramDefinition = {
   icon: "/icons/power.png",
   defaultPosition: { x: 128, y: 40 },
   defaultSize: { width: 320 },
+  resizable: false,
   component: WakeLockApp,
 };

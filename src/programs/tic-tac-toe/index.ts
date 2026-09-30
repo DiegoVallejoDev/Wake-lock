@@ -7,5 +7,6 @@ export const ticTacToe: ProgramDefinition = {
   icon: "/icons/applications-games.png",
   defaultPosition: { x: 680, y: 40 },
   defaultSize: { width: 220 },
+  resizable: false,
   component: TicTacToeApp,
 };

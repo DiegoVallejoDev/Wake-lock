@@ -7,5 +7,6 @@ export const minesweeper: ProgramDefinition = {
   icon: "/icons/minesweeper.png",
   defaultPosition: { x: 800, y: 40 },
   defaultSize: { width: 252 },
+  resizable: false,
   component: MinesweeperApp,
 };

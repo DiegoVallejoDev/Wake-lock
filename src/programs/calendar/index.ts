@@ -7,5 +7,6 @@ export const calendar: ProgramDefinition = {
   icon: "/icons/calendar.png",
   defaultPosition: { x: 920, y: 250 },
   defaultSize: { width: 230 },
+  resizable: false,
   component: CalendarApp,
 };

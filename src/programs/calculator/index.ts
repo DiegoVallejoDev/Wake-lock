@@ -7,5 +7,6 @@ export const calculator: ProgramDefinition = {
   icon: "/icons/accessories-calculator.png",
   defaultPosition: { x: 464, y: 40 },
   defaultSize: { width: 220 },
+  resizable: false,
   component: CalculatorApp,
 };

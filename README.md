@@ -28,7 +28,7 @@ src/programs/<name>/
   *.ts / *.module.css program logic and scoped styles
 ```
 
-The manifest is a `ProgramDefinition` (`src/shell/types.ts`): icon path, default window size and position, `desktop`/`startMenu` flags, `maximizable`, and the component. The shell reads only manifests, so adding a program means creating its folder and adding one line to the registry in `src/programs/index.ts`. Program components keep running while their windows are closed or minimized, which preserves their state like the original implementation.
+The manifest is a `ProgramDefinition` (`src/shell/types.ts`): icon path, default window size and position, `desktop`/`startMenu` flags, `maximizable`, `resizable`, and the component. The shell reads only manifests, so adding a program means creating its folder and adding one line to the registry in `src/programs/index.ts`. Program components keep running while their windows are closed or minimized, which preserves their state like the original implementation.
 
 98.css, DOMPurify, and the Chicago95 icons are vendored (`public/icons/`), so the site works fully offline.
 

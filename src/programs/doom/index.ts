@@ -7,5 +7,6 @@ export const doom: ProgramDefinition = {
   icon: "/icons/doom.png",
   defaultPosition: { x: 120, y: 60 },
   defaultSize: { width: 420 },
+  resizable: false,
   component: DoomApp,
 };

@@ -181,6 +181,100 @@ body {
   overflow: auto;
 }
 
+.resizer {
+  position: absolute;
+  z-index: 5;
+  touch-action: none;
+}
+
+.resizer-n,
+.resizer-s {
+  left: 10px;
+  right: 10px;
+  height: 6px;
+}
+
+.resizer-n {
+  top: -3px;
+  cursor: n-resize;
+}
+
+.resizer-s {
+  bottom: -3px;
+  cursor: s-resize;
+}
+
+.resizer-e,
+.resizer-w {
+  top: 10px;
+  bottom: 10px;
+  width: 6px;
+}
+
+.resizer-e {
+  right: -3px;
+  cursor: e-resize;
+}
+
+.resizer-w {
+  left: -3px;
+  cursor: w-resize;
+}
+
+.resizer-ne,
+.resizer-nw,
+.resizer-se,
+.resizer-sw {
+  width: 12px;
+  height: 12px;
+}
+
+.resizer-ne {
+  top: -3px;
+  right: -3px;
+  cursor: ne-resize;
+}
+
+.resizer-nw {
+  top: -3px;
+  left: -3px;
+  cursor: nw-resize;
+}
+
+.resizer-se {
+  bottom: -3px;
+  right: -3px;
+  cursor: se-resize;
+}
+
+.resizer-sw {
+  bottom: -3px;
+  left: -3px;
+  cursor: sw-resize;
+}
+
+.drag-shield {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+}
+
+.show-desktop {
+  min-width: 0;
+  min-height: 0;
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.show-desktop img {
+  image-rendering: pixelated;
+}
+
 .status-bar {
   display: flex;
   align-items: center;

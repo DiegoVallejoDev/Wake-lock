@@ -7,5 +7,6 @@ export const charmap: ProgramDefinition = {
   icon: "/icons/charmap.png",
   defaultPosition: { x: 320, y: 140 },
   defaultSize: { width: 300 },
+  resizable: false,
   component: CharMapApp,
 };

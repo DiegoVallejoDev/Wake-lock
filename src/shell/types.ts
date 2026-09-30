@@ -29,6 +29,8 @@ export interface ProgramDefinition {
   defaultPosition?: { x: number; y: number };
   /** Whether the maximize title-bar button and double-click maximize are enabled (default true). */
   maximizable?: boolean;
+  /** Whether edge/corner drag handles resize the window (default true). Set false for fixed-layout programs. */
+  resizable?: boolean;
   /** Whether a desktop icon is shown (default true). */
   desktop?: boolean;
   /** Whether the program appears in the Start menu (default true). */

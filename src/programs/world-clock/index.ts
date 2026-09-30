@@ -7,5 +7,6 @@ export const worldClock: ProgramDefinition = {
   icon: "/icons/worldclock.png",
   defaultPosition: { x: 380, y: 170 },
   defaultSize: { width: 340 },
+  resizable: false,
   component: WorldClockApp,
 };

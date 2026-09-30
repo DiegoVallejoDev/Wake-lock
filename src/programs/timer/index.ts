@@ -7,5 +7,6 @@ export const timer: ProgramDefinition = {
   icon: "/icons/clock.png",
   defaultPosition: { x: 464, y: 250 },
   defaultSize: { width: 280 },
+  resizable: false,
   component: TimerApp,
 };

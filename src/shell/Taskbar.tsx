@@ -8,6 +8,9 @@ import Clock from "./Clock";
 export default function Taskbar() {
   const wm = useWindowManager();
   const menuOpen = wm.state.startMenuOpen;
+  const anyOpen = wm.state.order.some(
+    (id) => wm.state.windows[id]?.status === "open",
+  );
 
   return (
     <footer className="taskbar">
@@ -26,6 +29,16 @@ export default function Taskbar() {
         {/* eslint-disable-next-line @next/next/no-img-element -- pixel icons need no image optimizer */}
         <img src="/icons/windows.png" alt="" width={16} height={16} />
         Start
+      </button>
+      <button
+        className="show-desktop"
+        aria-label={anyOpen ? "Show desktop" : "Restore windows"}
+        title={anyOpen ? "Show Desktop" : "Restore Windows"}
+        disabled={wm.state.order.length === 0}
+        onClick={() => wm.toggleDesktop()}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- pixel icons need no image optimizer */}
+        <img src="/icons/show-desktop.png" alt="" width={16} height={16} />
       </button>
       <div id="active-windows" role="toolbar" aria-label="Active windows">
         {wm.state.order.map((id) => {

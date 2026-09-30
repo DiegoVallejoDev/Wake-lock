@@ -15,6 +15,9 @@ export interface WindowState {
   z: number;
   x: number;
   y: number;
+  /** Explicit size set by resizing; absent means "use the manifest's defaultSize". */
+  width?: number;
+  height?: number;
   maximized: boolean;
   restore: { x: number; y: number; width?: number; height?: number } | null;
 }
@@ -37,11 +40,15 @@ export type ShellAction =
   | { type: "FOCUS"; id: string | null }
   | { type: "TOGGLE_MAXIMIZE"; id: string; geometry: { x: number; y: number; width?: number; height?: number } | null }
   | { type: "MOVE"; id: string; x: number; y: number }
+  | { type: "RESIZE"; id: string; x: number; y: number; width: number; height: number }
+  | { type: "DESKTOP_TOGGLE" }
   | { type: "TOGGLE_START" }
   | { type: "CLOSE_START" }
   | { type: "SELECT_ICON"; id: string | null };
 
 const CASCADE = 24;
+/** Wrap the cascade so late windows don't march off the screen edge. */
+const CASCADE_WRAP = 6;
 
 function topVisibleWindow(windows: Record<string, WindowState>, order: string[]): string | null {
   let best: string | null = null;
@@ -72,7 +79,7 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
     case "OPEN": {
       const existing = state.windows[action.id];
       const z = state.zCounter + 1;
-      const offset = state.order.length * CASCADE;
+      const offset = (state.order.length % CASCADE_WRAP) * CASCADE;
       const win: WindowState = existing
         ? { ...existing, status: "open", z }
         : {
@@ -125,6 +132,8 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
             maximized: false,
             x: win.restore?.x ?? win.x,
             y: win.restore?.y ?? win.y,
+            width: win.restore?.width ?? win.width,
+            height: win.restore?.height ?? win.height,
             restore: null,
           };
       const z = state.zCounter + 1;
@@ -143,6 +152,47 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
         ...state,
         windows: { ...state.windows, [action.id]: { ...win, x: action.x, y: action.y } },
       };
+    }
+    case "RESIZE": {
+      const win = state.windows[action.id];
+      if (!win) return state;
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [action.id]: {
+            ...win,
+            x: action.x,
+            y: action.y,
+            width: action.width,
+            height: action.height,
+          },
+        },
+      };
+    }
+    case "DESKTOP_TOGGLE": {
+      const windows = { ...state.windows };
+      const anyOpen = state.order.some((id) => windows[id]?.status === "open");
+      if (anyOpen) {
+        for (const id of state.order) {
+          const win = windows[id];
+          if (win && win.status === "open") {
+            windows[id] = { ...win, status: "minimized" };
+          }
+        }
+        return { ...state, windows, focused: null };
+      }
+      const anyMinimized = state.order.some(
+        (id) => windows[id]?.status === "minimized",
+      );
+      if (!anyMinimized) return state;
+      for (const id of state.order) {
+        const win = windows[id];
+        if (win && win.status === "minimized") {
+          windows[id] = { ...win, status: "open" };
+        }
+      }
+      return { ...state, windows, focused: topVisibleWindow(windows, state.order) };
     }
     case "TOGGLE_START":
       return { ...state, startMenuOpen: !state.startMenuOpen };
@@ -163,6 +213,9 @@ export interface WindowManager {
   toggleMaximize: (id: string, geometry: WindowState["restore"]) => void;
   focus: (id: string | null) => void;
   move: (id: string, x: number, y: number) => void;
+  resize: (id: string, geometry: { x: number; y: number; width: number; height: number }) => void;
+  /** "Show desktop": minimizes every open window, or restores them all when none are open. */
+  toggleDesktop: () => void;
   toggleStart: () => void;
   closeStart: () => void;
   selectIcon: (id: string | null) => void;
@@ -200,6 +253,8 @@ export function useWindowManagerState() {
       toggleMaximize: (id, geometry) => dispatch({ type: "TOGGLE_MAXIMIZE", id, geometry }),
       focus: (id) => dispatch({ type: "FOCUS", id }),
       move: (id, x, y) => dispatch({ type: "MOVE", id, x, y }),
+      resize: (id, geometry) => dispatch({ type: "RESIZE", id, ...geometry }),
+      toggleDesktop: () => dispatch({ type: "DESKTOP_TOGGLE" }),
       toggleStart: () => dispatch({ type: "TOGGLE_START" }),
       closeStart: () => dispatch({ type: "CLOSE_START" }),
       selectIcon: (id) => dispatch({ type: "SELECT_ICON", id }),

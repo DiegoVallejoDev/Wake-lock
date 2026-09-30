@@ -98,6 +98,74 @@ describe("window manager reducer", () => {
     expect(s.windows.a.restore).toBeNull();
   });
 
+  it("resizing stores explicit geometry on the window", () => {
+    let s = createInitialShellState();
+    s = open(s, "a", 10, 10);
+    s = shellReducer(s, {
+      type: "RESIZE",
+      id: "a",
+      x: 50,
+      y: 60,
+      width: 300,
+      height: 200,
+    });
+    expect(s.windows.a).toMatchObject({
+      x: 50,
+      y: 60,
+      width: 300,
+      height: 200,
+    });
+  });
+
+  it("un-maximizing restores a resized size, not just the position", () => {
+    let s = createInitialShellState();
+    s = open(s, "a", 10, 10);
+    s = shellReducer(s, {
+      type: "RESIZE",
+      id: "a",
+      x: 20,
+      y: 30,
+      width: 300,
+      height: 200,
+    });
+    s = shellReducer(s, {
+      type: "TOGGLE_MAXIMIZE",
+      id: "a",
+      geometry: { x: 20, y: 30, width: 300, height: 200 },
+    });
+    s = shellReducer(s, { type: "TOGGLE_MAXIMIZE", id: "a", geometry: null });
+    expect(s.windows.a).toMatchObject({
+      x: 20,
+      y: 30,
+      width: 300,
+      height: 200,
+      maximized: false,
+    });
+  });
+
+  it("cascade wraps instead of marching windows off the screen", () => {
+    let s = createInitialShellState();
+    for (let i = 0; i < 6; i++) s = open(s, `w${i}`, 10, 10);
+    s = open(s, "w6", 10, 10);
+    // Seventh window wraps back to the base position (6 % 6 = 0 offsets).
+    expect(s.windows.w6).toMatchObject({ x: 10, y: 10 });
+  });
+
+  it("show desktop minimizes all windows, then restores them and refocuses the top one", () => {
+    let s = createInitialShellState();
+    s = open(s, "a");
+    s = open(s, "b");
+    s = shellReducer(s, { type: "DESKTOP_TOGGLE" });
+    expect(s.windows.a.status).toBe("minimized");
+    expect(s.windows.b.status).toBe("minimized");
+    expect(s.focused).toBeNull();
+
+    s = shellReducer(s, { type: "DESKTOP_TOGGLE" });
+    expect(s.windows.a.status).toBe("open");
+    expect(s.windows.b.status).toBe("open");
+    expect(s.focused).toBe("b");
+  });
+
   it("toggles the start menu and close-start is a no-op when already closed", () => {
     let s = createInitialShellState();
     s = shellReducer(s, { type: "TOGGLE_START" });
